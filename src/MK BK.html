@@ -1,0 +1,2232 @@
+
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Medienkonzept BK NRW – Editor</title>
+    <style>
+      :root{
+        --bg:#0b1220;
+        --panel:#111a2e;
+        --panel2:#0f172a;
+        --text:#e6edf7;
+        --muted:#9fb0c7;
+        --line:rgba(255,255,255,.12);
+        --accent:#4f9cff;
+        --accent2:#7c5cff;
+        --danger:#ff4d4d;
+        --ok:#33d69f;
+        --warn:#ffcc66;
+        --shadow: 0 10px 28px rgba(0,0,0,.35);
+        --radius: 14px;
+        --radius2: 10px;
+        --font: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      }
+      *{box-sizing:border-box}
+      body{
+        margin:0;
+        font-family:var(--font);
+        background:linear-gradient(180deg, #071021, #0b1220 30%, #071021);
+        color:var(--text);
+      }
+      a{color:inherit}
+      #app{min-height:100vh; display:flex; flex-direction:column}
+      #app-header{
+        display:flex; align-items:center; justify-content:space-between;
+        padding:14px 16px;
+        border-bottom:1px solid var(--line);
+        background:rgba(10,16,30,.85);
+        backdrop-filter: blur(10px);
+        position:sticky; top:0; z-index:30;
+      }
+      #brand{display:flex; flex-direction:column; gap:2px}
+      #brand-title{font-weight:800; letter-spacing:.2px}
+      #brand-subtitle{font-size:12px; color:var(--muted)}
+      #header-actions{display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end}
+      .btn{
+        appearance:none; border:1px solid var(--line);
+        background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+        color:var(--text);
+        padding:8px 10px;
+        border-radius:10px;
+        cursor:pointer;
+        font-size:13px;
+        transition: transform .05s ease, border-color .2s ease, background .2s ease;
+        user-select:none;
+        white-space:nowrap;
+      }
+      .btn:hover{border-color:rgba(255,255,255,.24)}
+      .btn:active{transform: translateY(1px)}
+      .btn-danger{
+        border-color: rgba(255,77,77,.35);
+        background: linear-gradient(180deg, rgba(255,77,77,.20), rgba(255,77,77,.08));
+      }
+      .btn-file{display:inline-flex; align-items:center; justify-content:center}
+      #app-body{flex:1; display:flex; min-height:0}
+      #sidebar{
+        width:320px; min-width:280px; max-width:380px;
+        border-right:1px solid var(--line);
+        background:rgba(8,13,24,.75);
+        backdrop-filter: blur(10px);
+        display:flex; flex-direction:column;
+        gap:12px;
+        padding:12px;
+        overflow:auto;
+      }
+      #content{
+        flex:1;
+        overflow:auto;
+        padding:18px 18px 64px;
+      }
+      .panel{
+        background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+        border:1px solid var(--line);
+        border-radius: var(--radius);
+        padding:12px;
+        box-shadow: var(--shadow);
+      }
+      .panel.small{padding:10px}
+      .panel-title{
+        font-size:12px;
+        color:var(--muted);
+        text-transform:uppercase;
+        letter-spacing:.12em;
+        margin-bottom:10px;
+        font-weight:700;
+      }
+      .field{display:flex; flex-direction:column; gap:6px; margin-bottom:10px}
+      .field label{font-size:12px; color:var(--muted)}
+      input[type="text"], input[type="number"], input[type="date"], textarea, select{
+        width:100%;
+        padding:9px 10px;
+        border-radius: 10px;
+        border: 1px solid var(--line);
+        background: rgba(0,0,0,.20);
+        color: var(--text);
+        outline:none;
+      }
+      textarea{resize:vertical}
+      select{cursor:pointer}
+      .checkrow{display:flex; align-items:center; gap:10px; margin:8px 0}
+      .checkrow label{color:var(--text); font-size:13px}
+      #chapter-nav ul{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px}
+      .navitem{
+        display:flex; gap:10px; align-items:center;
+        padding:10px 10px;
+        border-radius: 12px;
+        border:1px solid transparent;
+        cursor:pointer;
+        user-select:none;
+      }
+      .navitem:hover{background:rgba(255,255,255,.05); border-color:rgba(255,255,255,.10)}
+      .navitem.active{background:rgba(79,156,255,.12); border-color:rgba(79,156,255,.35)}
+      .navnum{
+        width:26px; height:26px; border-radius:10px;
+        display:flex; align-items:center; justify-content:center;
+        background:rgba(255,255,255,.07);
+        border:1px solid rgba(255,255,255,.10);
+        font-size:12px;
+        color:var(--muted);
+      }
+      .navlabel{font-size:13px}
+      #sidebar-bottom{margin-top:auto}
+      #save-indicator{font-size:13px; color:var(--muted)}
+      #progress-indicator{font-size:12px; color:var(--muted); margin-top:6px}
+      .chapter{
+        max-width: 980px;
+        margin:0 auto 18px;
+        padding:16px;
+        border-radius: var(--radius);
+        border:1px solid var(--line);
+        background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.015));
+        box-shadow: var(--shadow);
+      }
+      .chapter h1{
+        margin:0 0 12px 0;
+        font-size:20px;
+        letter-spacing:.2px;
+      }
+      .chapter-body{display:flex; flex-direction:column; gap:12px}
+      .row{display:flex; gap:12px; flex-wrap:wrap}
+      .row .col{flex:1; min-width:240px}
+      .muted{color:var(--muted); font-size:13px; line-height:1.4}
+      .hint{
+        padding:10px 12px;
+        border-radius:12px;
+        border:1px dashed rgba(255,255,255,.18);
+        background: rgba(255,255,255,.03);
+        color:var(--muted);
+        font-size:13px;
+      }
+
+      .tablewrap{overflow:auto; border-radius:12px; border:1px solid var(--line)}
+      table{width:100%; border-collapse:collapse; min-width:720px; background:rgba(0,0,0,.12)}
+      th, td{padding:10px; border-bottom:1px solid rgba(255,255,255,.10); vertical-align:top}
+      th{font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.10em; text-align:left; background:rgba(255,255,255,.04)}
+      td{font-size:13px}
+      .actions{display:flex; gap:8px; flex-wrap:wrap}
+      .btn-small{padding:6px 8px; font-size:12px; border-radius:10px}
+      .pill{
+        display:inline-flex; align-items:center; gap:8px;
+        padding:6px 10px; border-radius:999px;
+        border:1px solid var(--line);
+        background:rgba(255,255,255,.04);
+        font-size:12px; color:var(--muted);
+      }
+      .card{
+        border:1px solid var(--line);
+        border-radius: var(--radius);
+        padding:12px;
+        background:rgba(0,0,0,.16);
+      }
+      .cardhead{
+        display:flex; align-items:center; justify-content:space-between;
+        gap:10px; margin-bottom:10px;
+      }
+      .cardtitle{
+        font-weight:700; font-size:14px;
+      }
+      .subgrid{
+        display:grid;
+        grid-template-columns: repeat(2, minmax(220px, 1fr));
+        gap:10px;
+      }
+      .subgrid.one{grid-template-columns:1fr}
+      .subgrid .field{margin:0}
+      .optional{display:none}
+
+      #app-footer{
+        border-top:1px solid var(--line);
+        display:flex; justify-content:space-between; gap:12px;
+        padding:10px 14px;
+        color:var(--muted);
+        font-size:12px;
+        background:rgba(10,16,30,.85);
+      }
+
+      /* Modal */
+      #modal.hidden{display:none}
+      #modal{
+        position:fixed; inset:0; z-index:60;
+        display:grid; place-items:center;
+      }
+      #modal-backdrop{position:absolute; inset:0; background:rgba(0,0,0,.55)}
+      #modal-card{
+        position:relative;
+        width:min(560px, calc(100vw - 24px));
+        background:linear-gradient(180deg, rgba(17,26,46,.98), rgba(15,23,42,.98));
+        border:1px solid rgba(255,255,255,.14);
+        border-radius: 18px;
+        box-shadow: 0 20px 60px rgba(0,0,0,.55);
+        padding:14px;
+      }
+      #modal-title{font-weight:800; margin-bottom:8px}
+      #modal-content{color:var(--muted); font-size:13px; line-height:1.45}
+      #modal-actions{display:flex; justify-content:flex-end; gap:10px; margin-top:12px}
+
+      /* Mobile */
+      @media (max-width: 980px){
+        #app-body{flex-direction:column}
+        #sidebar{
+          width:auto; max-width:none;
+          border-right:none; border-bottom:1px solid var(--line);
+        }
+        table{min-width:860px}
+      }
+
+      /* Print */
+      @media print{
+        body{background:#fff; color:#000}
+        #app-header, #sidebar, #app-footer, #modal{display:none !important}
+        #content{padding:0; overflow:visible}
+        .chapter{
+          box-shadow:none;
+          background:#fff;
+          border:1px solid #ccc;
+          page-break-inside: avoid;
+        }
+        input, textarea, select{
+          border:1px solid #ccc !important;
+          color:#000 !important;
+          background:#fff !important;
+        }
+        .btn, .actions{display:none !important}
+        .hint{border:1px dashed #bbb; color:#333}
+        table{min-width:0; background:#fff}
+        th{color:#333; background:#f2f2f2}
+        td, th{border-bottom:1px solid #ddd}
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="app">
+      <header id="app-header">
+        <div id="brand">
+          <div id="brand-title">Medienkonzept BK NRW</div>
+          <div id="brand-subtitle">Offline Editor</div>
+        </div>
+
+        <div id="header-actions">
+          <button class="btn" id="btn-export-html" type="button">Export HTML</button>
+          <button class="btn" id="btn-export-json" type="button">Export JSON</button>
+          <button class="btn" id="btn-export-csv" type="button">Export CSV</button>
+          <label class="btn btn-file" for="file-import-json">Import JSON</label>
+          <input id="file-import-json" type="file" accept="application/json" hidden />
+          <label class="btn btn-file" for="file-import-csv">Import CSV</label>
+          <input id="file-import-csv" type="file" accept=".csv,text/csv" hidden />
+          <button class="btn btn-danger" id="btn-reset" type="button">Daten zurücksetzen</button>
+          <button class="btn" id="btn-print" type="button">Drucken / PDF</button>
+        </div>
+      </header>
+
+      <div id="app-body">
+        <aside id="sidebar">
+          <div id="sidebar-top">
+            <div class="panel">
+              <div class="panel-title">Projekt</div>
+              <div class="field">
+                <label for="school-name">Schulname</label>
+                <input id="school-name" type="text" placeholder="z.B. Berufskolleg Musterstadt" />
+              </div>
+              <div class="field">
+                <label for="project-year">Version / Stand</label>
+                <input id="project-year" type="text" placeholder="z.B. 2026-02" />
+              </div>
+              <div class="field">
+                <label for="project-notes">Kurznotiz</label>
+                <textarea id="project-notes" rows="3" placeholder="Kurzbeschreibung / Executive Summary"></textarea>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-title">Optionale Kapitel</div>
+              <div class="checkrow">
+                <input id="toggle-dmp" type="checkbox" />
+                <label for="toggle-dmp">DMP-Kapitel aktivieren</label>
+              </div>
+              <div class="checkrow">
+                <input id="toggle-slz" type="checkbox" />
+                <label for="toggle-slz">Selbstlernzentrum aktivieren</label>
+              </div>
+            </div>
+          </div>
+
+          <nav id="chapter-nav">
+            <div class="panel-title">Kapitel</div>
+            <ul id="chapter-list"></ul>
+          </nav>
+
+          <div id="sidebar-bottom">
+            <div class="panel small">
+              <div class="panel-title">Status</div>
+              <div id="save-indicator">Bereit</div>
+              <div id="progress-indicator">0% ausgefüllt</div>
+            </div>
+          </div>
+        </aside>
+
+        <main id="content">
+          <section class="chapter" id="chapter-1" data-chapter="overview">
+            <h1>1. Überblick & Zielsetzung</h1>
+            <div class="chapter-body" id="chapter-1-body"></div>
+          </section>
+
+          <section class="chapter" id="chapter-2" data-chapter="school-profile">
+            <h1>2. Schulprofil & Bildungsgänge</h1>
+            <div class="chapter-body" id="chapter-2-body"></div>
+          </section>
+
+          <section class="chapter" id="chapter-3" data-chapter="future-vision">
+            <h1>3. Zukunftsvision</h1>
+            <div class="chapter-body" id="chapter-3-body"></div>
+          </section>
+
+          <section class="chapter" id="chapter-4" data-chapter="legal">
+            <h1>4. Rechtlicher Rahmen</h1>
+            <div class="chapter-body" id="chapter-4-body"></div>
+          </section>
+
+          <section class="chapter" id="chapter-5" data-chapter="org-structure">
+            <h1>5. Organisationsstruktur</h1>
+            <div class="chapter-body" id="chapter-5-body"></div>
+          </section>
+
+          <section class="chapter" id="chapter-6" data-chapter="workflows">
+            <h1>6. Digitale Arbeitsprozesse</h1>
+            <div class="chapter-body" id="chapter-6-body"></div>
+          </section>
+
+          <section class="chapter" id="chapter-7" data-chapter="infrastructure">
+            <h1>7. Infrastruktur & Räume</h1>
+            <div class="chapter-body" id="chapter-7-body"></div>
+          </section>
+
+          <section class="chapter optional" id="chapter-8" data-chapter="dmp">
+            <h1>8. DMP</h1>
+            <div class="chapter-body" id="chapter-8-body"></div>
+          </section>
+
+          <section class="chapter optional" id="chapter-9" data-chapter="slz">
+            <h1>9. Selbstlernzentrum</h1>
+            <div class="chapter-body" id="chapter-9-body"></div>
+          </section>
+
+          <section class="chapter" id="chapter-10" data-chapter="projects">
+            <h1>10. Besondere Projekte</h1>
+            <div class="chapter-body" id="chapter-10-body"></div>
+          </section>
+
+          <section class="chapter" id="chapter-11" data-chapter="training">
+            <h1>11. Fortbildung</h1>
+            <div class="chapter-body" id="chapter-11-body"></div>
+          </section>
+
+          <section class="chapter" id="chapter-12" data-chapter="security">
+            <h1>12. Datenschutz & IT-Sicherheit</h1>
+            <div class="chapter-body" id="chapter-12-body"></div>
+          </section>
+
+          <section class="chapter" id="chapter-13" data-chapter="ai-guideline">
+            <h1>13. KI-Leitfaden</h1>
+            <div class="chapter-body" id="chapter-13-body"></div>
+          </section>
+
+          <section class="chapter" id="chapter-14" data-chapter="evaluation">
+            <h1>14. Evaluation & Fortschreibung</h1>
+            <div class="chapter-body" id="chapter-14-body"></div>
+          </section>
+        </main>
+      </div>
+
+      <footer id="app-footer">
+        <div id="footer-left">Offline • localStorage • Export/Import verfügbar</div>
+        <div id="footer-right">© Susanne Alles</div>
+      </footer>
+    </div>
+
+    <!-- Modal (muss existieren) -->
+    <div id="modal" class="hidden" role="dialog" aria-modal="true">
+      <div id="modal-backdrop"></div>
+      <div id="modal-card">
+        <div id="modal-title">Hinweis</div>
+        <div id="modal-content"></div>
+        <div id="modal-actions">
+          <button class="btn" id="modal-cancel" type="button">Abbrechen</button>
+          <button class="btn btn-danger" id="modal-confirm" type="button">OK</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // =========================
+      // State
+      // =========================
+      const STORAGE_KEY = "medienkonzept_bk_nrw_state_v1";
+
+      const uid = (prefix="id") => prefix + "_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16);
+
+      const nowYear = () => new Date().getFullYear();
+
+      const DEFAULT_STATE = {
+        meta: {
+          schoolName: "",
+          version: "",
+          notes: "",
+          toggles: { dmp: false, slz: false }
+        },
+        chapters: {
+          overview: { purposeText: "", scopeText: "", summaryText: "" },
+          schoolProfile: { programs: [] },
+          futureVision: { visionText: "", fields: [] },
+          legal: { legalText: "", attachmentsNote: "" },
+          orgStructure: { roles: [], participationText: "" },
+          workflows: {
+            areas: [
+              { id: uid("area"), name: "Notenverwaltung", tool: "", owner: "", usageLevel: "empfohlen", rollout: "teilweise", privacyChecked: false, stability: "stabil", notes: "" },
+              { id: uid("area"), name: "Zeugnisschreibung", tool: "", owner: "", usageLevel: "empfohlen", rollout: "teilweise", privacyChecked: false, stability: "stabil", notes: "" },
+              { id: uid("area"), name: "Stundenplanung", tool: "", owner: "", usageLevel: "empfohlen", rollout: "teilweise", privacyChecked: false, stability: "stabil", notes: "" },
+              { id: uid("area"), name: "Vertretungsplanung", tool: "", owner: "", usageLevel: "empfohlen", rollout: "teilweise", privacyChecked: false, stability: "stabil", notes: "" },
+              { id: uid("area"), name: "Konferenztool", tool: "", owner: "", usageLevel: "empfohlen", rollout: "teilweise", privacyChecked: false, stability: "stabil", notes: "Hinweis: landesbereitgestellte Videokonferenzsysteme können hier dokumentiert werden." },
+              { id: uid("area"), name: "LMS", tool: "", owner: "", usageLevel: "empfohlen", rollout: "teilweise", privacyChecked: false, stability: "stabil", notes: "" },
+              { id: uid("area"), name: "KI-Tools", tool: "", owner: "", usageLevel: "freiwillig", rollout: "pilot", privacyChecked: false, stability: "störanfällig", notes: "" }
+            ]
+          },
+          infrastructure: { roomTypes: [], assets: [] },
+          dmp: { dmpText: "", software: "", modulesText: "", interfacesText: "", trainingNeedsText: "" },
+          slz: { conceptText: "", openingHours: "", staffingText: "", equipmentText: "", futureText: "" },
+          projects: { items: [] },
+          training: { items: [] },
+          security: { privacyText: "", accessText: "", backupText: "", incidentText: "", notes: "" },
+          aiGuideline: { stanceText: "", teacherUseText: "", studentUseText: "", assessmentText: "", labelingText: "", privacyText: "", trainingText: "", reviewCycleText: "" },
+          evaluation: { rhythmText: "", responsibilityText: "", instrumentsText: "", lastDate: "", nextDate: "", changeLogText: "" }
+        }
+      };
+
+      let state = loadState();
+
+      // =========================
+      // DOM helpers
+      // =========================
+      const $ = (sel, root=document) => root.querySelector(sel);
+      const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+
+      function el(tag, attrs={}, children=[]){
+        const node = document.createElement(tag);
+        for (const [k,v] of Object.entries(attrs)){
+          if (k === "class") node.className = v;
+          else if (k === "text") node.textContent = v;
+          else if (k === "html") node.innerHTML = v;
+          else if (k.startsWith("on") && typeof v === "function") node.addEventListener(k.slice(2), v);
+          else if (v === true) node.setAttribute(k, "");
+          else if (v !== false && v != null) node.setAttribute(k, v);
+        }
+        for (const child of children){
+          if (child == null) continue;
+          if (typeof child === "string") node.appendChild(document.createTextNode(child));
+          else node.appendChild(child);
+        }
+        return node;
+      }
+
+      function setSaveIndicator(text, color){
+        const n = $("#save-indicator");
+        n.textContent = text;
+        n.style.color = color || "var(--muted)";
+      }
+
+      // =========================
+      // Modal
+      // =========================
+      let modalResolve = null;
+      function showModal({title="Hinweis", content="", danger=false, confirmText="OK", cancelText="Abbrechen", showCancel=true}){
+        $("#modal-title").textContent = title;
+        $("#modal-content").innerHTML = content;
+        const confirmBtn = $("#modal-confirm");
+        confirmBtn.textContent = confirmText;
+        confirmBtn.className = danger ? "btn btn-danger" : "btn";
+        $("#modal-cancel").textContent = cancelText;
+        $("#modal-cancel").style.display = showCancel ? "" : "none";
+        $("#modal").classList.remove("hidden");
+        return new Promise((resolve)=>{
+          modalResolve = resolve;
+        });
+      }
+      function closeModal(result){
+        $("#modal").classList.add("hidden");
+        if (modalResolve){ modalResolve(result); modalResolve = null; }
+      }
+      $("#modal-backdrop").addEventListener("click", ()=>closeModal(false));
+      $("#modal-cancel").addEventListener("click", ()=>closeModal(false));
+      $("#modal-confirm").addEventListener("click", ()=>closeModal(true));
+
+      // =========================
+      // Persistence
+      // =========================
+      function loadState(){
+        try{
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return structuredClone(DEFAULT_STATE);
+          const parsed = JSON.parse(raw);
+          return mergeDefaults(structuredClone(DEFAULT_STATE), parsed);
+        }catch(e){
+          return structuredClone(DEFAULT_STATE);
+        }
+      }
+
+      function mergeDefaults(base, incoming){
+        // shallow-safe merge by keys, keeping default structure
+        if (typeof base !== "object" || base === null) return incoming ?? base;
+        if (Array.isArray(base)) return Array.isArray(incoming) ? incoming : base;
+        const out = {...base};
+        for (const key of Object.keys(base)){
+          if (incoming && Object.prototype.hasOwnProperty.call(incoming, key)){
+            out[key] = mergeDefaults(base[key], incoming[key]);
+          }
+        }
+        // allow extra keys in incoming
+        if (incoming && typeof incoming === "object" && !Array.isArray(incoming)){
+          for (const [k,v] of Object.entries(incoming)){
+            if (!Object.prototype.hasOwnProperty.call(out, k)) out[k] = v;
+          }
+        }
+        return out;
+      }
+
+      let saveTimer = null;
+      function scheduleSave(){
+        if (saveTimer) clearTimeout(saveTimer);
+        saveTimer = setTimeout(()=>{
+          try{
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            setSaveIndicator("Gespeichert", "var(--ok)");
+            setTimeout(()=>setSaveIndicator("Bereit", "var(--muted)"), 900);
+            updateProgress();
+          }catch(e){
+            setSaveIndicator("Speichern fehlgeschlagen", "var(--danger)");
+          }
+        }, 300);
+      }
+
+      // =========================
+      // Chapters definition + Nav
+      // =========================
+      const CHAPTERS = [
+        { num: 1, id: "overview", title: "Überblick & Zielsetzung", selector: "#chapter-1", optional: false },
+        { num: 2, id: "school-profile", title: "Schulprofil & Bildungsgänge", selector: "#chapter-2", optional: false },
+        { num: 3, id: "future-vision", title: "Zukunftsvision", selector: "#chapter-3", optional: false },
+        { num: 4, id: "legal", title: "Rechtlicher Rahmen", selector: "#chapter-4", optional: false },
+        { num: 5, id: "org-structure", title: "Organisationsstruktur", selector: "#chapter-5", optional: false },
+        { num: 6, id: "workflows", title: "Digitale Arbeitsprozesse", selector: "#chapter-6", optional: false },
+        { num: 7, id: "infrastructure", title: "Infrastruktur & Räume", selector: "#chapter-7", optional: false },
+        { num: 8, id: "dmp", title: "DMP", selector: "#chapter-8", optional: true, toggle: "dmp" },
+        { num: 9, id: "slz", title: "Selbstlernzentrum", selector: "#chapter-9", optional: true, toggle: "slz" },
+        { num:10, id: "projects", title: "Besondere Projekte", selector: "#chapter-10", optional: false },
+        { num:11, id: "training", title: "Fortbildung", selector: "#chapter-11", optional: false },
+        { num:12, id: "security", title: "Datenschutz & IT-Sicherheit", selector: "#chapter-12", optional: false },
+        { num:13, id: "ai-guideline", title: "KI-Leitfaden", selector: "#chapter-13", optional: false },
+        { num:14, id: "evaluation", title: "Evaluation & Fortschreibung", selector: "#chapter-14", optional: false }
+      ];
+
+      function isChapterVisible(ch){
+        if (!ch.optional) return true;
+        return !!state.meta.toggles[ch.toggle];
+      }
+
+      function renderNav(){
+        const list = $("#chapter-list");
+        list.innerHTML = "";
+        for (const ch of CHAPTERS){
+          if (!isChapterVisible(ch)) continue;
+          const li = el("li", {}, [
+            el("div", { class:"navitem", "data-target": ch.selector }, [
+              el("div", { class:"navnum", text: String(ch.num) }),
+              el("div", { class:"navlabel", text: ch.title })
+            ])
+          ]);
+          li.querySelector(".navitem").addEventListener("click", ()=>{
+            const target = document.querySelector(ch.selector);
+            target.scrollIntoView({behavior:"smooth", block:"start"});
+            setActiveNav(ch.selector);
+          });
+          list.appendChild(li);
+        }
+        setActiveNav(currentChapterSelector());
+      }
+
+      function currentChapterSelector(){
+        const top = $("#content").scrollTop;
+        const chapters = CHAPTERS.filter(isChapterVisible).map(c=>document.querySelector(c.selector));
+        let best = chapters[0];
+        let bestDist = Infinity;
+        for (const node of chapters){
+          const rect = node.getBoundingClientRect();
+          // relative to viewport: use rect.top distance to header
+          const dist = Math.abs(rect.top - 80);
+          if (dist < bestDist){
+            bestDist = dist;
+            best = node;
+          }
+        }
+        return best ? "#" + best.id : "#chapter-1";
+      }
+
+      function setActiveNav(selector){
+        $$(".navitem").forEach(n=>n.classList.remove("active"));
+        const item = $(`.navitem[data-target="${selector}"]`);
+        if (item) item.classList.add("active");
+      }
+
+      $("#content").addEventListener("scroll", ()=>{
+        // lightweight active update
+        setActiveNav(currentChapterSelector());
+      });
+
+      // =========================
+      // Render chapters
+      // =========================
+      function renderAll(){
+        applyTogglesVisibility();
+        renderNav();
+        renderMetaPanel();
+        renderOverview();
+        renderSchoolProfile();
+        renderFutureVision();
+        renderLegal();
+        renderOrgStructure();
+        renderWorkflows();
+        renderInfrastructure();
+        renderDmp();
+        renderSlz();
+        renderProjects();
+        renderTraining();
+        renderSecurity();
+        renderAiGuideline();
+        renderEvaluation();
+        updateProgress();
+      }
+
+      function applyTogglesVisibility(){
+        // FIX: optional chapters were hidden by the .optional {display:none} class.
+        // When enabled, remove the "optional" class so the chapter becomes visible.
+        $("#chapter-8").classList.toggle("optional", !state.meta.toggles.dmp);
+        $("#chapter-9").classList.toggle("optional", !state.meta.toggles.slz);
+      }
+
+      function renderMetaPanel(){
+        $("#school-name").value = state.meta.schoolName || "";
+        $("#project-year").value = state.meta.version || "";
+        $("#project-notes").value = state.meta.notes || "";
+        $("#toggle-dmp").checked = !!state.meta.toggles.dmp;
+        $("#toggle-slz").checked = !!state.meta.toggles.slz;
+      }
+
+      // Bind meta inputs
+      $("#school-name").addEventListener("input", (e)=>{ state.meta.schoolName = e.target.value; scheduleSave(); });
+      $("#project-year").addEventListener("input", (e)=>{ state.meta.version = e.target.value; scheduleSave(); });
+      $("#project-notes").addEventListener("input", (e)=>{ state.meta.notes = e.target.value; scheduleSave(); });
+      $("#toggle-dmp").addEventListener("change", (e)=>{ state.meta.toggles.dmp = e.target.checked; scheduleSave(); renderAll(); });
+      $("#toggle-slz").addEventListener("change", (e)=>{ state.meta.toggles.slz = e.target.checked; scheduleSave(); renderAll(); });
+
+      function sectionBody(chNum){ return $(`#chapter-${chNum}-body`); }
+
+      function renderOverview(){
+        const body = sectionBody(1);
+        body.innerHTML = "";
+        const o = state.chapters.overview;
+        body.appendChild(el("div", { class:"hint", html:
+          "<b>Hinweis:</b> Dieser Editor dokumentiert organisatorische und technische Rahmenbedingungen (BK). Keine PoK-Details, keine Unterrichtsszenarien." }));
+        body.appendChild(textAreaField("Zielsetzung", o.purposeText, (v)=>{ o.purposeText=v; }));
+        body.appendChild(textAreaField("Geltungsbereich", o.scopeText, (v)=>{ o.scopeText=v; }));
+        body.appendChild(textAreaField("Kurzfassung / Executive Summary", o.summaryText, (v)=>{ o.summaryText=v; }));
+      }
+
+      function renderSchoolProfile(){
+        const body = sectionBody(2);
+        body.innerHTML = "";
+        body.appendChild(el("div", { class:"hint", html:
+          "<b>Hinweis:</b> Hier werden Bildungsgänge als Profil-/Strukturdaten erfasst (keine DSK-Verankerung, keine didaktischen Details)." }));
+        const wrap = el("div", { class:"tablewrap" });
+        const table = el("table");
+        const thead = el("thead", {}, [el("tr", {}, [
+          el("th",{text:"Name"}),
+          el("th",{text:"Typ"}),
+          el("th",{text:"Schülerzahl"}),
+          el("th",{text:"Notiz"}),
+          el("th",{text:"Aktionen"})
+        ])]);
+        const tbody = el("tbody");
+        for (const p of state.chapters.schoolProfile.programs){
+          const tr = el("tr", {}, [
+            el("td", {}, [inputInline(p.name, "z.B. Fachschule …", (v)=>{p.name=v;})]),
+            el("td", {}, [inputInline(p.type, "z.B. Anlage A/B/C", (v)=>{p.type=v;})]),
+            el("td", {}, [numberInline(p.students, "0", (v)=>{p.students = v;}, {min:0})]),
+            el("td", {}, [textInlineArea(p.notes, "Kurznotiz", (v)=>{p.notes=v;})]),
+            el("td", {}, [
+              el("div",{class:"actions"},[
+                el("button",{class:"btn btn-small btn-danger", type:"button", text:"Löschen", onclick: async ()=>{
+                  const ok = await showModal({title:"Bildungsgang löschen?", content:"Dieser Eintrag wird entfernt.", danger:true});
+                  if (!ok) return;
+                  state.chapters.schoolProfile.programs = state.chapters.schoolProfile.programs.filter(x=>x.id!==p.id);
+                  scheduleSave(); renderSchoolProfile(); renderProjects(); // because programLinks
+                }})
+              ])
+            ])
+          ]);
+          tbody.appendChild(tr);
+        }
+        table.appendChild(thead); table.appendChild(tbody);
+        wrap.appendChild(table);
+        body.appendChild(wrap);
+
+        body.appendChild(el("div",{class:"row"},[
+          el("div",{class:"col"},[
+            el("button",{class:"btn", type:"button", text:"Bildungsgang hinzufügen", onclick: ()=>{
+              state.chapters.schoolProfile.programs.push({ id: uid("prog"), name:"", type:"", students:0, notes:"" });
+              scheduleSave(); renderSchoolProfile(); renderProjects();
+            }})
+          ])
+        ]));
+      }
+
+      function renderFutureVision(){
+        const body = sectionBody(3);
+        body.innerHTML = "";
+        const fv = state.chapters.futureVision;
+
+        body.appendChild(el("div", { class:"hint", html:
+          "<b>Zukunftsvision:</b> Nutzen Sie dieses Kapitel für die strategische Perspektive (z.B. 3–5 Jahre) inkl. Entwicklungsfeldern und Meilensteinen." }));
+
+        body.appendChild(textAreaField("Kurzvision (z. B. „Unsere Schule im Jahr …“)", fv.visionText, (v)=>{ fv.visionText=v; }));
+
+        const controls = el("div",{class:"row"},[
+          el("div",{class:"col"},[
+            el("button",{class:"btn", type:"button", text:"Entwicklungsfeld hinzufügen", onclick: ()=>{
+              fv.fields.push({ id: uid("field"), title:"", horizon:"mittelfristig", status:"geplant", milestones:[] });
+              scheduleSave(); renderFutureVision();
+            }})
+          ]),
+          el("div",{class:"col"},[
+            el("div",{class:"pill", html:"Status: <span style='color:var(--muted)'>geplant • umsetzung • abgeschlossen • verworfen</span>"})
+          ])
+        ]);
+        body.appendChild(controls);
+
+        for (const f of fv.fields){
+          const card = el("div",{class:"card"},[
+            el("div",{class:"cardhead"},[
+              el("div",{class:"cardtitle", text: f.title ? f.title : "Entwicklungsfeld"}),
+              el("div",{class:"actions"},[
+                el("button",{class:"btn btn-small", type:"button", text:"Meilenstein +", onclick: ()=>{
+                  f.milestones.push({ id: uid("ms"), text:"", date:"", status:"geplant" });
+                  scheduleSave(); renderFutureVision();
+                }}),
+                el("button",{class:"btn btn-small btn-danger", type:"button", text:"Löschen", onclick: async ()=>{
+                  const ok = await showModal({title:"Entwicklungsfeld löschen?", content:"Dieses Entwicklungsfeld wird entfernt.", danger:true});
+                  if (!ok) return;
+                  fv.fields = fv.fields.filter(x=>x.id!==f.id);
+                  scheduleSave(); renderFutureVision();
+                }})
+              ])
+            ]),
+            el("div",{class:"subgrid"},[
+              fieldWrap("Titel", inputControl(f.title, "z.B. „Digitale Arbeitsprozesse“", (v)=>{f.title=v;})),
+              fieldWrap("Zeithorizont", selectControl(f.horizon, [
+                ["kurzfristig","kurzfristig (1 Jahr)"],
+                ["mittelfristig","mittelfristig (ca. 3 Jahre)"],
+                ["langfristig","langfristig (5+ Jahre)"]
+              ], (v)=>{f.horizon=v;})),
+              fieldWrap("Status", selectControl(f.status, [
+                ["geplant","geplant"],
+                ["umsetzung","in Umsetzung"],
+                ["abgeschlossen","abgeschlossen"],
+                ["verworfen","verworfen"]
+              ], (v)=>{f.status=v;})),
+              fieldWrap("Hinweis", el("div",{class:"muted", text:"Meilensteine können Datum und Status erhalten."}))
+            ])
+          ]);
+
+          // Milestones table
+          const msWrap = el("div",{class:"tablewrap"});
+          const msTable = el("table");
+          msTable.appendChild(el("thead",{},[el("tr",{},[
+            el("th",{text:"Meilenstein"}),
+            el("th",{text:"Datum"}),
+            el("th",{text:"Status"}),
+            el("th",{text:"Aktionen"})
+          ])]));
+          const msBody = el("tbody");
+          for (const m of f.milestones){
+            msBody.appendChild(el("tr",{},[
+              el("td",{},[inputInline(m.text,"z.B. „Tool-Rollout abgeschlossen“",(v)=>{m.text=v;})]),
+              el("td",{},[dateInline(m.date,(v)=>{m.date=v;})]),
+              el("td",{},[selectInline(m.status,[
+                ["geplant","geplant"],
+                ["umsetzung","in Umsetzung"],
+                ["abgeschlossen","abgeschlossen"],
+                ["verworfen","verworfen"]
+              ],(v)=>{m.status=v;})]),
+              el("td",{},[el("div",{class:"actions"},[
+                el("button",{class:"btn btn-small btn-danger", type:"button", text:"Löschen", onclick: async ()=>{
+                  const ok = await showModal({title:"Meilenstein löschen?", content:"Dieser Meilenstein wird entfernt.", danger:true});
+                  if (!ok) return;
+                  f.milestones = f.milestones.filter(x=>x.id!==m.id);
+                  scheduleSave(); renderFutureVision();
+                }})
+              ])])
+            ]));
+          }
+          msTable.appendChild(msBody);
+          msWrap.appendChild(msTable);
+          card.appendChild(el("div",{style:"margin-top:10px"},[msWrap]));
+
+          body.appendChild(card);
+        }
+      }
+
+      function renderLegal(){
+        const body = sectionBody(4);
+        body.innerHTML = "";
+        const l = state.chapters.legal;
+        body.appendChild(el("div",{class:"hint", html:
+          "<b>Hinweis:</b> Tragen Sie hier den rechtlichen/organisatorischen Rahmen ein (z.B. SchulG NRW, AO-BK, Datenschutz, schulische Vorgaben)."}));
+        body.appendChild(textAreaField("Rechtlicher Rahmen (Freitext)", l.legalText, (v)=>{ l.legalText=v; }));
+        body.appendChild(textAreaField("Hinweise / Referenzen / Ablageorte", l.attachmentsNote, (v)=>{ l.attachmentsNote=v; }));
+      }
+
+      function renderOrgStructure(){
+        const body = sectionBody(5);
+        body.innerHTML = "";
+        const org = state.chapters.orgStructure;
+
+        body.appendChild(el("div",{class:"hint", html:
+          "<b>Rollen:</b> Keine Rollen sind vorgegeben. Legen Sie Rollen an und beschreiben Sie Verantwortungsbereiche. Unterhalb: Beteiligungsstruktur (Freitext)."}));
+
+        body.appendChild(el("div",{class:"row"},[
+          el("div",{class:"col"},[
+            el("button",{class:"btn", type:"button", text:"Rolle hinzufügen", onclick: ()=>{
+              org.roles.push({ id: uid("role"), title:"", description:"", responsibilities:"", reportLine:"", backup:"" });
+              scheduleSave(); renderOrgStructure();
+            }})
+          ])
+        ]));
+
+        for (const r of org.roles){
+          body.appendChild(el("div",{class:"card"},[
+            el("div",{class:"cardhead"},[
+              el("div",{class:"cardtitle", text: r.title ? r.title : "Rolle"}),
+              el("div",{class:"actions"},[
+                el("button",{class:"btn btn-small btn-danger", type:"button", text:"Löschen", onclick: async ()=>{
+                  const ok = await showModal({title:"Rolle löschen?", content:"Diese Rolle wird entfernt.", danger:true});
+                  if (!ok) return;
+                  org.roles = org.roles.filter(x=>x.id!==r.id);
+                  scheduleSave(); renderOrgStructure();
+                }})
+              ])
+            ]),
+            el("div",{class:"subgrid"},[
+              fieldWrap("Rollenbezeichnung", inputControl(r.title, "z.B. „IT-Supportkoordination“", (v)=>{r.title=v;})),
+              fieldWrap("Berichtslinie (optional)", inputControl(r.reportLine, "z.B. Schulleitung / Abteilungsleitung", (v)=>{r.reportLine=v;})),
+              fieldWrap("Funktionsbeschreibung", textAreaControl(r.description, 3, "Kurzbeschreibung", (v)=>{r.description=v;})),
+              fieldWrap("Vertretung geregelt?", inputControl(r.backup, "z.B. „Vertretung durch …“", (v)=>{r.backup=v;})),
+              fieldWrap("Verantwortungsbereiche (Freitext)", textAreaControl(r.responsibilities, 4, "Zuständigkeiten, Aufgaben, Schnittstellen …", (v)=>{r.responsibilities=v;}))
+            ])
+          ]));
+        }
+
+        body.appendChild(textAreaField("Beteiligungsstruktur (Freitext)", org.participationText, (v)=>{ org.participationText=v; }, "z.B. Einbindung Kollegium, SV, Schulträger, Ausbildungsbetriebe, externe Partner"));
+      }
+
+      function renderWorkflows(){
+        const body = sectionBody(6);
+        body.innerHTML = "";
+        const wf = state.chapters.workflows;
+
+        body.appendChild(el("div",{class:"hint", html:
+          "<b>Digitale Arbeitsprozesse:</b> Kein Unterrichtsrahmen. Dokumentieren Sie organisatorische Bereiche (Noten, Zeugnisse, Planung, Konferenz/Videokonferenz, LMS, KI-Tools) und fügen Sie weitere Bereiche hinzu (z.B. DMP-Software)."}));
+
+        body.appendChild(el("div",{class:"row"},[
+          el("div",{class:"col"},[
+            el("button",{class:"btn", type:"button", text:"Bereich hinzufügen", onclick: ()=>{
+              wf.areas.push({ id: uid("area"), name:"", tool:"", owner:"", usageLevel:"freiwillig", rollout:"pilot", privacyChecked:false, stability:"stabil", notes:"" });
+              scheduleSave(); renderWorkflows();
+            }})
+          ])
+        ]));
+
+        for (const a of wf.areas){
+          const card = el("div",{class:"card"},[
+            el("div",{class:"cardhead"},[
+              el("div",{class:"cardtitle", text: a.name ? a.name : "Bereich"}),
+              el("div",{class:"actions"},[
+                el("button",{class:"btn btn-small btn-danger", type:"button", text:"Löschen", onclick: async ()=>{
+                  const ok = await showModal({title:"Bereich löschen?", content:"Dieser Bereich wird entfernt.", danger:true});
+                  if (!ok) return;
+                  wf.areas = wf.areas.filter(x=>x.id!==a.id);
+                  scheduleSave(); renderWorkflows();
+                }})
+              ])
+            ]),
+            el("div",{class:"subgrid"},[
+              fieldWrap("Bereich", inputControl(a.name, "z.B. „DMP-Software“", (v)=>{a.name=v;})),
+              fieldWrap("Tool / System", inputControl(a.tool, "z.B. …", (v)=>{a.tool=v;})),
+              fieldWrap("Zuständigkeit", inputControl(a.owner, "z.B. Rolle/Team", (v)=>{a.owner=v;})),
+              fieldWrap("Nutzungsgrad", selectControl(a.usageLevel, [
+                ["verpflichtend","verpflichtend"],
+                ["empfohlen","empfohlen"],
+                ["freiwillig","freiwillig"]
+              ], (v)=>{a.usageLevel=v;})),
+              fieldWrap("Schulweite Nutzung", selectControl(a.rollout, [
+                ["vollständig","vollständig"],
+                ["teilweise","teilweise"],
+                ["pilot","Pilotphase"]
+              ], (v)=>{a.rollout=v;})),
+              fieldWrap("Datenschutz geprüft?", checkboxControl(a.privacyChecked, (v)=>{a.privacyChecked=v;})),
+              fieldWrap("Stabilität", selectControl(a.stability, [
+                ["stabil","stabil"],
+                ["störanfällig","störanfällig"],
+                ["problematisch","problematisch"]
+              ], (v)=>{a.stability=v;})),
+              fieldWrap("Entwicklungsbedarf / Notizen", textAreaControl(a.notes, 3, "Freitext", (v)=>{a.notes=v;}))
+            ])
+          ]);
+
+          // Extra hint for conference tool / videoconference listing
+          if ((a.name || "").toLowerCase().includes("konferenz")){
+            card.appendChild(el("div",{class:"hint", style:"margin-top:10px", html:
+              "<b>Hinweis:</b> Für Berufskollegs können landesbereitgestellte Videokonferenzsysteme hier mit erfasst werden (Tool/System, Rollout, Stabilität, Zuständigkeit)." }));
+          }
+
+          body.appendChild(card);
+        }
+      }
+
+      function renderInfrastructure(){
+        const body = sectionBody(7);
+        body.innerHTML = "";
+        const infra = state.chapters.infrastructure;
+
+        body.appendChild(el("div",{class:"hint", html:
+          "<b>Räume & Ausstattung:</b> Bausteine anlegen (Gerätetyp/Komponente), Anzahl, Zustand (aktuell/veraltet/defekt) und <b>Anschaffungsjahr</b>. Das Gerätealter wird automatisch berechnet."}));
+
+        // Room types
+        const roomCard = el("div",{class:"card"},[
+          el("div",{class:"cardhead"},[
+            el("div",{class:"cardtitle", text:"Raumtypen"}),
+            el("div",{class:"actions"},[
+              el("button",{class:"btn btn-small", type:"button", text:"Raumtyp hinzufügen", onclick: ()=>{
+                infra.roomTypes.push({ id: uid("room"), name:"", notes:"" });
+                scheduleSave(); renderInfrastructure();
+              }})
+            ])
+          ])
+        ]);
+
+        const roomWrap = el("div",{class:"tablewrap"});
+        const roomTable = el("table");
+        roomTable.appendChild(el("thead",{},[el("tr",{},[
+          el("th",{text:"Raumtyp"}),
+          el("th",{text:"Notiz"}),
+          el("th",{text:"Aktionen"})
+        ])]));
+        const roomBody = el("tbody");
+        for (const rt of infra.roomTypes){
+          roomBody.appendChild(el("tr",{},[
+            el("td",{},[inputInline(rt.name,"z.B. Klassenraum / Fachraum",(v)=>{rt.name=v;})]),
+            el("td",{},[textInlineArea(rt.notes,"Optional",(v)=>{rt.notes=v;})]),
+            el("td",{},[el("div",{class:"actions"},[
+              el("button",{class:"btn btn-small btn-danger", type:"button", text:"Löschen", onclick: async ()=>{
+                const ok = await showModal({title:"Raumtyp löschen?", content:"Raumtyp wird entfernt. Zugeordnete Ausstattungen bleiben erhalten (ggf. neu zuordnen).", danger:true});
+                if (!ok) return;
+                infra.roomTypes = infra.roomTypes.filter(x=>x.id!==rt.id);
+                scheduleSave(); renderInfrastructure();
+              }})
+            ])])
+          ]));
+        }
+        roomTable.appendChild(roomBody);
+        roomWrap.appendChild(roomTable);
+        roomCard.appendChild(roomWrap);
+        body.appendChild(roomCard);
+
+        // Assets
+        const assetsCard = el("div",{class:"card"},[
+          el("div",{class:"cardhead"},[
+            el("div",{class:"cardtitle", text:"Ausstattungsbausteine"}),
+            el("div",{class:"actions"},[
+              el("button",{class:"btn btn-small", type:"button", text:"Ausstattung hinzufügen", onclick: ()=>{
+                infra.assets.push({
+                  id: uid("asset"),
+                  roomTypeId: infra.roomTypes[0]?.id || "",
+                  name:"",
+                  count:0,
+                  condition:"aktuell",
+                  procurementYear: nowYear(),
+                  maintenance:false,
+                  owner:"",
+                  notes:""
+                });
+                scheduleSave(); renderInfrastructure();
+              }})
+            ])
+          ])
+        ]);
+
+        const filterRow = el("div",{class:"row"},[
+          el("div",{class:"col"},[
+            el("div",{class:"field"},[
+              el("label",{text:"Filter nach Raumtyp"}),
+              buildRoomTypeSelect("", infra.roomTypes, (val)=>{
+                assetsCard.setAttribute("data-filter-room", val);
+                renderInfrastructure();
+              }, {includeAll:true, current: assetsCard.getAttribute("data-filter-room") || ""})
+            ])
+          ]),
+          el("div",{class:"col"},[
+            el("div",{class:"pill", html:"Priorität: <span style='color:var(--muted)'>defekt → veraltet → ältestes Anschaffungsjahr</span>"})
+          ])
+        ]);
+        assetsCard.appendChild(filterRow);
+
+        // priority list computed
+        const priority = computeAssetPriority(infra.assets);
+        assetsCard.appendChild(el("div",{class:"hint", html:
+          "<b>Ersatzbedarf (automatisch):</b> " + (priority.length ? "Top " + Math.min(priority.length, 8) + " Einträge:" : "Keine Einträge vorhanden.")}));
+
+        if (priority.length){
+          const ul = el("ul",{style:"margin:8px 0 0 18px; color:var(--muted); font-size:13px"});
+          for (const a of priority.slice(0,8)){
+            const age = safeComputeAge(a.procurementYear);
+            ul.appendChild(el("li",{text:`${a.name || "Ausstattung"} • Zustand: ${a.condition} • Anschaffungsjahr: ${a.procurementYear || "—"} • Alter: ${age != null ? age + " J." : "—"}`}));
+          }
+          assetsCard.appendChild(ul);
+        }
+
+        const assetsWrap = el("div",{class:"tablewrap", style:"margin-top:10px"});
+        const assetsTable = el("table");
+        assetsTable.appendChild(el("thead",{},[el("tr",{},[
+          el("th",{text:"Raumtyp"}),
+          el("th",{text:"Baustein / Gerät"}),
+          el("th",{text:"Anzahl"}),
+          el("th",{text:"Zustand"}),
+          el("th",{text:"Anschaffungsjahr"}),
+          el("th",{text:"Alter (auto)"}),
+          el("th",{text:"Wartung"}),
+          el("th",{text:"Zuständig"}),
+          el("th",{text:"Notiz"}),
+          el("th",{text:"Aktionen"})
+        ])]));
+
+        const assetsBody = el("tbody");
+        const filterRoom = assetsCard.getAttribute("data-filter-room") || "";
+        const visibleAssets = infra.assets.filter(a => !filterRoom || a.roomTypeId === filterRoom);
+
+        for (const a of visibleAssets){
+          const age = safeComputeAge(a.procurementYear);
+          assetsBody.appendChild(el("tr",{},[
+            el("td",{},[
+              buildRoomTypeSelect(a.roomTypeId, infra.roomTypes, (val)=>{a.roomTypeId=val; scheduleSave();}, {includeAll:false})
+            ]),
+            el("td",{},[inputInline(a.name,"z.B. Display, PC, Dockingstation",(v)=>{a.name=v;})]),
+            el("td",{},[numberInline(a.count,"0",(v)=>{a.count=v;}, {min:0})]),
+            el("td",{},[selectInline(a.condition,[
+              ["aktuell","aktuell"],
+              ["veraltet","veraltet"],
+              ["defekt","defekt"]
+            ],(v)=>{a.condition=v;})]),
+            el("td",{},[numberInline(a.procurementYear, String(nowYear()), (v)=>{
+              // validate year
+              const y = v;
+              a.procurementYear = y;
+            }, {min:2000, max: nowYear()})]),
+            el("td",{},[el("span",{class:"muted", text: (age==null ? "—" : age + " J.")})]),
+            el("td",{},[
+              el("div",{class:"checkrow", style:"margin:0"},[
+                el("input",{type:"checkbox", checked: !!a.maintenance, onchange:(e)=>{a.maintenance=e.target.checked; scheduleSave();}}),
+                el("span",{class:"muted", text:"Vertrag/Regelung"})
+              ])
+            ]),
+            el("td",{},[inputInline(a.owner,"Optional",(v)=>{a.owner=v;})]),
+            el("td",{},[textInlineArea(a.notes,"Optional",(v)=>{a.notes=v;})]),
+            el("td",{},[el("div",{class:"actions"},[
+              el("button",{class:"btn btn-small btn-danger", type:"button", text:"Löschen", onclick: async ()=>{
+                const ok = await showModal({title:"Ausstattung löschen?", content:"Dieser Baustein wird entfernt.", danger:true});
+                if (!ok) return;
+                infra.assets = infra.assets.filter(x=>x.id!==a.id);
+                scheduleSave(); renderInfrastructure();
+              }})
+            ])])
+          ]));
+        }
+
+        assetsTable.appendChild(assetsBody);
+        assetsWrap.appendChild(assetsTable);
+        assetsCard.appendChild(assetsWrap);
+
+        body.appendChild(assetsCard);
+      }
+
+      function safeComputeAge(procurementYear){
+        const y = Number(procurementYear);
+        if (!Number.isFinite(y)) return null;
+        const cy = nowYear();
+        if (y < 1900 || y > cy) return null;
+        return cy - y;
+      }
+
+      function computeAssetPriority(assets){
+        const rankCond = (c)=> c==="defekt" ? 0 : (c==="veraltet" ? 1 : 2);
+        return [...assets].sort((a,b)=>{
+          const rc = rankCond(a.condition) - rankCond(b.condition);
+          if (rc !== 0) return rc;
+          const ay = Number(a.procurementYear) || 9999;
+          const by = Number(b.procurementYear) || 9999;
+          if (ay !== by) return ay - by;
+          return (a.name||"").localeCompare(b.name||"");
+        });
+      }
+
+      function buildRoomTypeSelect(value, roomTypes, onChange, opts={}){
+        const includeAll = !!opts.includeAll;
+        const current = opts.current ?? value;
+        const sel = el("select",{});
+        if (includeAll){
+          sel.appendChild(el("option",{value:"", text:"(alle)"}));
+        }
+        sel.appendChild(el("option",{value:"", text:"(nicht zugeordnet)"}));
+        for (const rt of roomTypes){
+          sel.appendChild(el("option",{value: rt.id, text: rt.name || "(ohne Name)"}));
+        }
+        sel.value = current || "";
+        sel.addEventListener("change",(e)=>{
+          onChange(e.target.value);
+          scheduleSave();
+        });
+        return sel;
+      }
+
+      function renderDmp(){
+        const body = sectionBody(8);
+        body.innerHTML = "";
+        const d = state.chapters.dmp;
+        body.appendChild(el("div",{class:"hint", html:"<b>DMP:</b> Aktivieren Sie dieses Kapitel nur, wenn Ihre Schule DMP nutzt."}));
+        body.appendChild(fieldWrap("DMP-Software", inputControl(d.software, "z.B. …", (v)=>{d.software=v;})));
+        body.appendChild(textAreaField("DMP – Freitext", d.dmpText, (v)=>{d.dmpText=v;}));
+        body.appendChild(textAreaField("Eingesetzte Module", d.modulesText, (v)=>{d.modulesText=v;}));
+        body.appendChild(textAreaField("Schnittstellen / Integrationen", d.interfacesText, (v)=>{d.interfacesText=v;}));
+        body.appendChild(textAreaField("Schulungs-/Fortbildungsbedarf", d.trainingNeedsText, (v)=>{d.trainingNeedsText=v;}));
+      }
+
+      function renderSlz(){
+        const body = sectionBody(9);
+        body.innerHTML = "";
+        const s = state.chapters.slz;
+        body.appendChild(el("div",{class:"hint", html:"<b>Selbstlernzentrum:</b> Konzept, Öffnungszeiten, Personal, Ausstattung, Perspektive."}));
+        body.appendChild(fieldWrap("Öffnungszeiten", inputControl(s.openingHours, "z.B. Mo–Do 08:00–15:00", (v)=>{s.openingHours=v;})));
+        body.appendChild(textAreaField("Konzept (Freitext)", s.conceptText, (v)=>{s.conceptText=v;}));
+        body.appendChild(textAreaField("Personal / Betreuung", s.staffingText, (v)=>{s.staffingText=v;}));
+        body.appendChild(textAreaField("Ausstattung (Freitext)", s.equipmentText, (v)=>{s.equipmentText=v;}));
+        body.appendChild(textAreaField("Zukunftsplanung", s.futureText, (v)=>{s.futureText=v;}));
+      }
+
+      function renderProjects(){
+        const body = sectionBody(10);
+        body.innerHTML = "";
+        const proj = state.chapters.projects;
+
+        body.appendChild(el("div",{class:"hint", html:
+          "<b>Besondere Projekte:</b> Dokumentieren Sie Projekte (z.B. Podcast, Video, Kooperationen). Verknüpfung mit Bildungsgängen möglich."}));
+
+        body.appendChild(el("button",{class:"btn", type:"button", text:"Projekt hinzufügen", onclick: ()=>{
+          proj.items.push({
+            id: uid("proj"),
+            title:"",
+            type:"Podcast",
+            runTime:"",
+            programLinks:[],
+            goalText:"",
+            resourcesText:"",
+            successCriteriaText:"",
+            continuation:false
+          });
+          scheduleSave(); renderProjects();
+        }}));
+
+        const programs = state.chapters.schoolProfile.programs;
+
+        for (const p of proj.items){
+          const card = el("div",{class:"card"},[
+            el("div",{class:"cardhead"},[
+              el("div",{class:"cardtitle", text: p.title ? p.title : "Projekt"}),
+              el("div",{class:"actions"},[
+                el("button",{class:"btn btn-small btn-danger", type:"button", text:"Löschen", onclick: async ()=>{
+                  const ok = await showModal({title:"Projekt löschen?", content:"Dieses Projekt wird entfernt.", danger:true});
+                  if (!ok) return;
+                  proj.items = proj.items.filter(x=>x.id!==p.id);
+                  scheduleSave(); renderProjects();
+                }})
+              ])
+            ]),
+            el("div",{class:"subgrid"},[
+              fieldWrap("Titel", inputControl(p.title, "z.B. „Schulpodcast“", (v)=>{p.title=v;})),
+              fieldWrap("Projektart", selectControl(p.type, [
+                ["Podcast","Podcast"],
+                ["Videoprojekt","Videoprojekt"],
+                ["Kooperation","Kooperation"],
+                ["Wettbewerb","Wettbewerb"],
+                ["KI-Projekt","KI-Projekt"],
+                ["Sonstiges","Sonstiges"]
+              ], (v)=>{p.type=v;})),
+              fieldWrap("Laufzeit", inputControl(p.runTime, "z.B. 2026–2027", (v)=>{p.runTime=v;})),
+              fieldWrap("Verstetigung geplant?", checkboxControl(!!p.continuation, (v)=>{p.continuation=v;})),
+              fieldWrap("Beteiligte Bildungsgänge", multiSelectPrograms(p.programLinks, programs, (arr)=>{p.programLinks=arr;})),
+              fieldWrap("Zielsetzung", textAreaControl(p.goalText, 3, "Freitext", (v)=>{p.goalText=v;})),
+              fieldWrap("Ressourcenbedarf", textAreaControl(p.resourcesText, 3, "Freitext", (v)=>{p.resourcesText=v;})),
+              fieldWrap("Erfolgskriterien (optional)", textAreaControl(p.successCriteriaText, 3, "Freitext", (v)=>{p.successCriteriaText=v;}))
+            ])
+          ]);
+          body.appendChild(card);
+        }
+      }
+
+      function multiSelectPrograms(selectedIds, programs, onChange){
+        const wrap = el("div",{});
+        if (!programs.length){
+          wrap.appendChild(el("div",{class:"muted", text:"(Keine Bildungsgänge erfasst)"}));
+          return wrap;
+        }
+        const list = el("div",{style:"display:flex; flex-direction:column; gap:6px"});
+        for (const prog of programs){
+          const id = prog.id;
+          const checked = selectedIds.includes(id);
+          const row = el("label",{class:"checkrow", style:"margin:0; cursor:pointer"},[
+            el("input",{type:"checkbox", checked, onchange:(e)=>{
+              const next = new Set(selectedIds);
+              if (e.target.checked) next.add(id); else next.delete(id);
+              onChange(Array.from(next));
+              scheduleSave();
+            }}),
+            el("span",{text: prog.name || "(ohne Name)"})
+          ]);
+          list.appendChild(row);
+        }
+        wrap.appendChild(list);
+        return wrap;
+      }
+
+      function renderTraining(){
+        const body = sectionBody(11);
+        body.innerHTML = "";
+        const tr = state.chapters.training;
+        body.appendChild(el("div",{class:"hint", html:"<b>Fortbildung:</b> Planen und dokumentieren Sie Fortbildungsmaßnahmen (Thema, Zielgruppe, Status, Datum)."}));
+        body.appendChild(el("button",{class:"btn", type:"button", text:"Fortbildung hinzufügen", onclick: ()=>{
+          tr.items.push({ id: uid("train"), topic:"", targetGroup:"", format:"", mandatory:false, status:"geplant", date:"", notes:"" });
+          scheduleSave(); renderTraining();
+        }}));
+
+        for (const t of tr.items){
+          body.appendChild(el("div",{class:"card"},[
+            el("div",{class:"cardhead"},[
+              el("div",{class:"cardtitle", text: t.topic ? t.topic : "Fortbildung"}),
+              el("div",{class:"actions"},[
+                el("button",{class:"btn btn-small btn-danger", type:"button", text:"Löschen", onclick: async ()=>{
+                  const ok = await showModal({title:"Fortbildung löschen?", content:"Dieser Eintrag wird entfernt.", danger:true});
+                  if (!ok) return;
+                  tr.items = tr.items.filter(x=>x.id!==t.id);
+                  scheduleSave(); renderTraining();
+                }})
+              ])
+            ]),
+            el("div",{class:"subgrid"},[
+              fieldWrap("Thema", inputControl(t.topic, "z.B. „Zeugnisschreibung – Workflow“", (v)=>{t.topic=v;})),
+              fieldWrap("Zielgruppe", inputControl(t.targetGroup, "z.B. Kollegium / Team …", (v)=>{t.targetGroup=v;})),
+              fieldWrap("Format", inputControl(t.format, "z.B. SCHiLF, Webinar …", (v)=>{t.format=v;})),
+              fieldWrap("Pflicht?", checkboxControl(!!t.mandatory, (v)=>{t.mandatory=v;})),
+              fieldWrap("Status", selectControl(t.status, [
+                ["geplant","geplant"],
+                ["umsetzung","in Umsetzung"],
+                ["abgeschlossen","abgeschlossen"]
+              ], (v)=>{t.status=v;})),
+              fieldWrap("Datum", dateControl(t.date, (v)=>{t.date=v;})),
+              fieldWrap("Notizen", textAreaControl(t.notes, 3, "Freitext", (v)=>{t.notes=v;}))
+            ])
+          ]));
+        }
+      }
+
+      function renderSecurity(){
+        const body = sectionBody(12);
+        body.innerHTML = "";
+        const s = state.chapters.security;
+        body.appendChild(el("div",{class:"hint", html:"<b>Datenschutz & IT-Sicherheit:</b> Dokumentieren Sie Vereinbarungen, Zugriffsrechte, Backups, Vorfallmanagement."}));
+        body.appendChild(textAreaField("Datenschutz (Freitext)", s.privacyText, (v)=>{s.privacyText=v;}));
+        body.appendChild(textAreaField("Zugriffs-/Rechtekonzept", s.accessText, (v)=>{s.accessText=v;}));
+        body.appendChild(textAreaField("Datensicherung / Backup", s.backupText, (v)=>{s.backupText=v;}));
+        body.appendChild(textAreaField("IT-Notfall / Vorfälle", s.incidentText, (v)=>{s.incidentText=v;}));
+        body.appendChild(textAreaField("Weitere Notizen", s.notes, (v)=>{s.notes=v;}));
+      }
+
+      function renderAiGuideline(){
+        const body = sectionBody(13);
+        body.innerHTML = "";
+        const a = state.chapters.aiGuideline;
+        body.appendChild(el("div",{class:"hint", html:"<b>KI-Leitfaden:</b> Eigenes Kapitel – keine KI-Inhalte im Medieneinsatz/Unterricht. Hier: Rahmen, Kennzeichnung, Prüfungsbezug, Datenschutz, Fortbildung."}));
+        body.appendChild(textAreaField("Grundhaltung / Leitlinie", a.stanceText, (v)=>{a.stanceText=v;}));
+        body.appendChild(textAreaField("Nutzung durch Lehrkräfte", a.teacherUseText, (v)=>{a.teacherUseText=v;}));
+        body.appendChild(textAreaField("Nutzung durch Schüler:innen", a.studentUseText, (v)=>{a.studentUseText=v;}));
+        body.appendChild(textAreaField("Prüfungsbezug", a.assessmentText, (v)=>{a.assessmentText=v;}));
+        body.appendChild(textAreaField("Kennzeichnungspflichten", a.labelingText, (v)=>{a.labelingText=v;}));
+        body.appendChild(textAreaField("Datenschutzaspekte", a.privacyText, (v)=>{a.privacyText=v;}));
+        body.appendChild(textAreaField("Fortbildungsbedarf", a.trainingText, (v)=>{a.trainingText=v;}));
+        body.appendChild(textAreaField("Überprüfungsrhythmus", a.reviewCycleText, (v)=>{a.reviewCycleText=v;}));
+      }
+
+      function renderEvaluation(){
+        const body = sectionBody(14);
+        body.innerHTML = "";
+        const e = state.chapters.evaluation;
+        body.appendChild(el("div",{class:"hint", html:"<b>Evaluation & Fortschreibung:</b> Rhythmus, Zuständigkeit, Instrumente, letzte/nächste Aktualisierung, Änderungslog."}));
+        body.appendChild(textAreaField("Evaluationsrhythmus", e.rhythmText, (v)=>{e.rhythmText=v;}));
+        body.appendChild(textAreaField("Zuständigkeit", e.responsibilityText, (v)=>{e.responsibilityText=v;}));
+        body.appendChild(textAreaField("Instrumente", e.instrumentsText, (v)=>{e.instrumentsText=v;}));
+        body.appendChild(el("div",{class:"row"},[
+          el("div",{class:"col"},[fieldWrap("Letzte Evaluation", dateControl(e.lastDate, (v)=>{e.lastDate=v;}))]),
+          el("div",{class:"col"},[fieldWrap("Nächste Evaluation", dateControl(e.nextDate, (v)=>{e.nextDate=v;}))])
+        ]));
+        body.appendChild(textAreaField("Änderungsprotokoll (Freitext)", e.changeLogText, (v)=>{e.changeLogText=v;}));
+      }
+
+      // =========================
+      // Form primitives
+      // =========================
+      function fieldWrap(labelText, control){
+        return el("div",{class:"field"},[
+          el("label",{text: labelText}),
+          control
+        ]);
+      }
+
+      function inputControl(value, placeholder, onSet){
+        const i = el("input",{type:"text", value: value ?? "", placeholder});
+        i.addEventListener("input",(e)=>{ onSet(e.target.value); scheduleSave(); });
+        return i;
+      }
+
+      function numberControl(value, placeholder, onSet, opts={}){
+        const i = el("input",{type:"number", value: (value ?? 0), placeholder});
+        if (opts.min != null) i.min = String(opts.min);
+        if (opts.max != null) i.max = String(opts.max);
+        i.addEventListener("input",(e)=>{ onSet(e.target.value === "" ? "" : Number(e.target.value)); scheduleSave(); });
+        return i;
+      }
+
+      function dateControl(value, onSet){
+        const i = el("input",{type:"date", value: value ?? ""});
+        i.addEventListener("input",(e)=>{ onSet(e.target.value); scheduleSave(); });
+        return i;
+      }
+
+      function textAreaControl(value, rows, placeholder, onSet){
+        const t = el("textarea",{rows:String(rows), placeholder});
+        t.value = value ?? "";
+        t.addEventListener("input",(e)=>{ onSet(e.target.value); scheduleSave(); });
+        return t;
+      }
+
+      function selectControl(value, options, onSet){
+        const s = el("select",{});
+        for (const [val,label] of options){
+          s.appendChild(el("option",{value:val, text:label}));
+        }
+        s.value = value ?? options[0][0];
+        s.addEventListener("change",(e)=>{ onSet(e.target.value); scheduleSave(); });
+        return s;
+      }
+
+      function checkboxControl(value, onSet){
+        const wrap = el("div",{class:"checkrow", style:"margin:0"},[
+          el("input",{type:"checkbox", checked: !!value, onchange:(e)=>{ onSet(e.target.checked); scheduleSave(); }}),
+          el("span",{class:"muted", text:""})
+        ]);
+        return wrap;
+      }
+
+      function textAreaField(label, value, onSet, placeholder="Freitext"){
+        const wrap = el("div",{class:"field"},[
+          el("label",{text:label}),
+          textAreaControl(value, 5, placeholder, (v)=>{ onSet(v); scheduleSave(); })
+        ]);
+        return wrap;
+      }
+
+      // Inline table inputs
+      function inputInline(value, placeholder, onSet){
+        const i = el("input",{type:"text", value: value ?? "", placeholder});
+        i.addEventListener("input",(e)=>{ onSet(e.target.value); scheduleSave(); });
+        return i;
+      }
+      function numberInline(value, placeholder, onSet, opts={}){
+        const i = el("input",{type:"number", value: (value ?? 0), placeholder});
+        if (opts.min != null) i.min = String(opts.min);
+        if (opts.max != null) i.max = String(opts.max);
+        i.addEventListener("input",(e)=>{ onSet(e.target.value === "" ? "" : Number(e.target.value)); scheduleSave(); });
+        return i;
+      }
+      function dateInline(value, onSet){
+        const i = el("input",{type:"date", value: value ?? ""});
+        i.addEventListener("input",(e)=>{ onSet(e.target.value); scheduleSave(); });
+        return i;
+      }
+      function selectInline(value, options, onSet){
+        const s = el("select",{});
+        for (const [val,label] of options){
+          s.appendChild(el("option",{value:val, text:label}));
+        }
+        s.value = value ?? options[0][0];
+        s.addEventListener("change",(e)=>{ onSet(e.target.value); scheduleSave(); });
+        return s;
+      }
+      function textInlineArea(value, placeholder, onSet){
+        const t = el("textarea",{rows:"2", placeholder});
+        t.value = value ?? "";
+        t.addEventListener("input",(e)=>{ onSet(e.target.value); scheduleSave(); });
+        return t;
+      }
+
+      // =========================
+      // Progress
+      // =========================
+      function updateProgress(){
+        // Simple heuristic: count non-empty key fields and at least one entry in key lists
+        const checks = [];
+
+        // meta
+        checks.push(!!(state.meta.schoolName || "").trim());
+        checks.push(!!(state.meta.version || "").trim());
+
+        // overview
+        checks.push(!!(state.chapters.overview.purposeText || "").trim());
+        checks.push(!!(state.chapters.overview.scopeText || "").trim());
+        checks.push(!!(state.chapters.overview.summaryText || "").trim());
+
+        // programs
+        checks.push(state.chapters.schoolProfile.programs.length > 0);
+
+        // future vision
+        checks.push(!!(state.chapters.futureVision.visionText || "").trim());
+        checks.push(state.chapters.futureVision.fields.length > 0);
+
+        // legal
+        checks.push(!!(state.chapters.legal.legalText || "").trim());
+
+        // org roles
+        checks.push(state.chapters.orgStructure.roles.length > 0);
+        checks.push(!!(state.chapters.orgStructure.participationText || "").trim());
+
+        // workflows
+        checks.push(state.chapters.workflows.areas.length > 0);
+
+        // infrastructure
+        checks.push(state.chapters.infrastructure.roomTypes.length > 0);
+        checks.push(state.chapters.infrastructure.assets.length > 0);
+
+        // optional
+        if (state.meta.toggles.dmp){
+          checks.push(!!(state.chapters.dmp.software || "").trim() || !!(state.chapters.dmp.dmpText || "").trim());
+        }
+        if (state.meta.toggles.slz){
+          checks.push(!!(state.chapters.slz.conceptText || "").trim() || !!(state.chapters.slz.equipmentText || "").trim());
+        }
+
+        // projects & training
+        checks.push(state.chapters.projects.items.length > 0);
+        checks.push(state.chapters.training.items.length > 0);
+
+        // security & ai & evaluation
+        checks.push(!!(state.chapters.security.privacyText || "").trim() || !!(state.chapters.security.accessText || "").trim());
+        checks.push(!!(state.chapters.aiGuideline.stanceText || "").trim() || !!(state.chapters.aiGuideline.teacherUseText || "").trim());
+        checks.push(!!(state.chapters.evaluation.rhythmText || "").trim() || !!(state.chapters.evaluation.responsibilityText || "").trim());
+
+        const total = checks.length;
+        const done = checks.filter(Boolean).length;
+        const pct = total ? Math.round((done/total)*100) : 0;
+        $("#progress-indicator").textContent = `${pct}% ausgefüllt`;
+      }
+
+      // =========================
+      // Export / Import / Reset / Print
+      // =========================
+      function download(filename, content, mime){
+        const blob = new Blob([content], {type: mime});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }
+
+      // JSON
+      $("#btn-export-json").addEventListener("click", ()=>{
+        download("medienkonzept.json", JSON.stringify(state, null, 2), "application/json");
+      });
+
+      $("#file-import-json").addEventListener("change", async (e)=>{
+        const file = e.target.files?.[0];
+        e.target.value = "";
+        if (!file) return;
+        try{
+          const text = await file.text();
+          const parsed = JSON.parse(text);
+          // basic schema check
+          if (!parsed || typeof parsed !== "object" || !parsed.meta || !parsed.chapters){
+            await showModal({title:"Import fehlgeschlagen", content:"Die JSON-Datei hat nicht die erwartete Struktur (meta/chapters).", danger:true, showCancel:false});
+            return;
+          }
+          state = mergeDefaults(structuredClone(DEFAULT_STATE), parsed);
+          scheduleSave();
+          renderAll();
+          await showModal({title:"Import erfolgreich", content:"JSON wurde importiert.", showCancel:false});
+        }catch(err){
+          await showModal({title:"Import fehlgeschlagen", content:"Die Datei konnte nicht gelesen oder geparst werden.", danger:true, showCancel:false});
+        }
+      });
+
+      // CSV (long format)
+      $("#btn-export-csv").addEventListener("click", ()=>{
+        const rows = exportLongCsv(state);
+        const csv = toCsv(rows);
+        download("medienkonzept.csv", csv, "text/csv");
+      });
+
+      $("#file-import-csv").addEventListener("change", async (e)=>{
+        const file = e.target.files?.[0];
+        e.target.value = "";
+        if (!file) return;
+        try{
+          const text = await file.text();
+          const rows = parseCsv(text);
+          const rebuilt = importLongCsv(rows);
+          state = mergeDefaults(structuredClone(DEFAULT_STATE), rebuilt);
+          scheduleSave();
+          renderAll();
+          await showModal({title:"Import erfolgreich", content:"CSV wurde importiert.", showCancel:false});
+        }catch(err){
+          await showModal({title:"Import fehlgeschlagen", content:"CSV konnte nicht verarbeitet werden. Prüfen Sie das Long-Format (section,entityType,entityId,field,value).", danger:true, showCancel:false});
+        }
+      });
+
+      // Export HTML (read-only)
+      $("#btn-export-html").addEventListener("click", ()=>{
+        const html = buildReadonlyHtml(state);
+        download("medienkonzept_export.html", html, "text/html");
+      });
+
+      // Reset
+      $("#btn-reset").addEventListener("click", async ()=>{
+        const ok = await showModal({
+          title:"Daten zurücksetzen?",
+          content:"Alle lokal gespeicherten Daten werden gelöscht und durch eine leere Vorlage ersetzt.",
+          danger:true,
+          confirmText:"Ja, löschen"
+        });
+        if (!ok) return;
+        localStorage.removeItem(STORAGE_KEY);
+        state = structuredClone(DEFAULT_STATE);
+        scheduleSave();
+        renderAll();
+      });
+
+      // Print
+      $("#btn-print").addEventListener("click", ()=>window.print());
+
+      // =========================
+      // CSV long format
+      // =========================
+      // rows: {section, entityType, entityId, field, value}
+      function exportLongCsv(st){
+        const out = [];
+        const push = (section, entityType, entityId, field, value)=>{
+          out.push({section, entityType, entityId, field, value: value == null ? "" : String(value)});
+        };
+
+        // meta
+        push("meta","meta","meta","schoolName", st.meta.schoolName);
+        push("meta","meta","meta","version", st.meta.version);
+        push("meta","meta","meta","notes", st.meta.notes);
+        push("meta","toggle","toggle","dmp", st.meta.toggles.dmp);
+        push("meta","toggle","toggle","slz", st.meta.toggles.slz);
+
+        // overview
+        push("overview","chapter","overview","purposeText", st.chapters.overview.purposeText);
+        push("overview","chapter","overview","scopeText", st.chapters.overview.scopeText);
+        push("overview","chapter","overview","summaryText", st.chapters.overview.summaryText);
+
+        // programs
+        for (const p of st.chapters.schoolProfile.programs){
+          push("schoolProfile","program",p.id,"name",p.name);
+          push("schoolProfile","program",p.id,"type",p.type);
+          push("schoolProfile","program",p.id,"students",p.students);
+          push("schoolProfile","program",p.id,"notes",p.notes);
+        }
+
+        // future vision
+        push("futureVision","chapter","futureVision","visionText", st.chapters.futureVision.visionText);
+        for (const f of st.chapters.futureVision.fields){
+          push("futureVision","field",f.id,"title",f.title);
+          push("futureVision","field",f.id,"horizon",f.horizon);
+          push("futureVision","field",f.id,"status",f.status);
+          for (const m of f.milestones){
+            push("futureVision","milestone",m.id,"fieldId",f.id);
+            push("futureVision","milestone",m.id,"text",m.text);
+            push("futureVision","milestone",m.id,"date",m.date);
+            push("futureVision","milestone",m.id,"status",m.status);
+          }
+        }
+
+        // legal
+        push("legal","chapter","legal","legalText", st.chapters.legal.legalText);
+        push("legal","chapter","legal","attachmentsNote", st.chapters.legal.attachmentsNote);
+
+        // org
+        push("orgStructure","chapter","orgStructure","participationText", st.chapters.orgStructure.participationText);
+        for (const r of st.chapters.orgStructure.roles){
+          push("orgStructure","role",r.id,"title",r.title);
+          push("orgStructure","role",r.id,"description",r.description);
+          push("orgStructure","role",r.id,"responsibilities",r.responsibilities);
+          push("orgStructure","role",r.id,"reportLine",r.reportLine);
+          push("orgStructure","role",r.id,"backup",r.backup);
+        }
+
+        // workflows
+        for (const a of st.chapters.workflows.areas){
+          push("workflows","area",a.id,"name",a.name);
+          push("workflows","area",a.id,"tool",a.tool);
+          push("workflows","area",a.id,"owner",a.owner);
+          push("workflows","area",a.id,"usageLevel",a.usageLevel);
+          push("workflows","area",a.id,"rollout",a.rollout);
+          push("workflows","area",a.id,"privacyChecked",a.privacyChecked);
+          push("workflows","area",a.id,"stability",a.stability);
+          push("workflows","area",a.id,"notes",a.notes);
+        }
+
+        // infrastructure
+        for (const rt of st.chapters.infrastructure.roomTypes){
+          push("infrastructure","roomType",rt.id,"name",rt.name);
+          push("infrastructure","roomType",rt.id,"notes",rt.notes);
+        }
+        for (const a of st.chapters.infrastructure.assets){
+          push("infrastructure","asset",a.id,"roomTypeId",a.roomTypeId);
+          push("infrastructure","asset",a.id,"name",a.name);
+          push("infrastructure","asset",a.id,"count",a.count);
+          push("infrastructure","asset",a.id,"condition",a.condition);
+          push("infrastructure","asset",a.id,"procurementYear",a.procurementYear);
+          push("infrastructure","asset",a.id,"maintenance",a.maintenance);
+          push("infrastructure","asset",a.id,"owner",a.owner);
+          push("infrastructure","asset",a.id,"notes",a.notes);
+        }
+
+        // dmp
+        push("dmp","chapter","dmp","software", st.chapters.dmp.software);
+        push("dmp","chapter","dmp","dmpText", st.chapters.dmp.dmpText);
+        push("dmp","chapter","dmp","modulesText", st.chapters.dmp.modulesText);
+        push("dmp","chapter","dmp","interfacesText", st.chapters.dmp.interfacesText);
+        push("dmp","chapter","dmp","trainingNeedsText", st.chapters.dmp.trainingNeedsText);
+
+        // slz
+        push("slz","chapter","slz","conceptText", st.chapters.slz.conceptText);
+        push("slz","chapter","slz","openingHours", st.chapters.slz.openingHours);
+        push("slz","chapter","slz","staffingText", st.chapters.slz.staffingText);
+        push("slz","chapter","slz","equipmentText", st.chapters.slz.equipmentText);
+        push("slz","chapter","slz","futureText", st.chapters.slz.futureText);
+
+        // projects
+        for (const p of st.chapters.projects.items){
+          push("projects","project",p.id,"title",p.title);
+          push("projects","project",p.id,"type",p.type);
+          push("projects","project",p.id,"runTime",p.runTime);
+          push("projects","project",p.id,"programLinks", JSON.stringify(p.programLinks || []));
+          push("projects","project",p.id,"goalText",p.goalText);
+          push("projects","project",p.id,"resourcesText",p.resourcesText);
+          push("projects","project",p.id,"successCriteriaText",p.successCriteriaText);
+          push("projects","project",p.id,"continuation", p.continuation);
+        }
+
+        // training
+        for (const t of st.chapters.training.items){
+          push("training","training",t.id,"topic",t.topic);
+          push("training","training",t.id,"targetGroup",t.targetGroup);
+          push("training","training",t.id,"format",t.format);
+          push("training","training",t.id,"mandatory",t.mandatory);
+          push("training","training",t.id,"status",t.status);
+          push("training","training",t.id,"date",t.date);
+          push("training","training",t.id,"notes",t.notes);
+        }
+
+        // security
+        push("security","chapter","security","privacyText", st.chapters.security.privacyText);
+        push("security","chapter","security","accessText", st.chapters.security.accessText);
+        push("security","chapter","security","backupText", st.chapters.security.backupText);
+        push("security","chapter","security","incidentText", st.chapters.security.incidentText);
+        push("security","chapter","security","notes", st.chapters.security.notes);
+
+        // aiGuideline
+        for (const [k,v] of Object.entries(st.chapters.aiGuideline)){
+          push("aiGuideline","chapter","aiGuideline",k,v);
+        }
+
+        // evaluation
+        for (const [k,v] of Object.entries(st.chapters.evaluation)){
+          push("evaluation","chapter","evaluation",k,v);
+        }
+
+        return out;
+      }
+
+      function importLongCsv(rows){
+        // Expect header row at least; accept with/without headers.
+        // We map into a fresh state.
+        const st = structuredClone(DEFAULT_STATE);
+
+        // detect header
+        let start = 0;
+        if (rows.length && rows[0].section === "section" && rows[0].entityType === "entityType") start = 1;
+
+        // Helpers: ensure items exist by entityType
+        const ensure = (entityType, id) => {
+          const c = st.chapters;
+          switch(entityType){
+            case "program":{
+              let it = c.schoolProfile.programs.find(x=>x.id===id);
+              if (!it){ it = {id, name:"", type:"", students:0, notes:""}; c.schoolProfile.programs.push(it); }
+              return it;
+            }
+            case "field":{
+              let it = c.futureVision.fields.find(x=>x.id===id);
+              if (!it){ it = {id, title:"", horizon:"mittelfristig", status:"geplant", milestones:[]}; c.futureVision.fields.push(it); }
+              return it;
+            }
+            case "milestone":{
+              // milestones need fieldId to attach; temporarily store in map
+              return null;
+            }
+            case "role":{
+              let it = c.orgStructure.roles.find(x=>x.id===id);
+              if (!it){ it = {id, title:"", description:"", responsibilities:"", reportLine:"", backup:""}; c.orgStructure.roles.push(it); }
+              return it;
+            }
+            case "area":{
+              let it = c.workflows.areas.find(x=>x.id===id);
+              if (!it){ it = {id, name:"", tool:"", owner:"", usageLevel:"freiwillig", rollout:"pilot", privacyChecked:false, stability:"stabil", notes:""}; c.workflows.areas.push(it); }
+              return it;
+            }
+            case "roomType":{
+              let it = c.infrastructure.roomTypes.find(x=>x.id===id);
+              if (!it){ it = {id, name:"", notes:""}; c.infrastructure.roomTypes.push(it); }
+              return it;
+            }
+            case "asset":{
+              let it = c.infrastructure.assets.find(x=>x.id===id);
+              if (!it){ it = {id, roomTypeId:"", name:"", count:0, condition:"aktuell", procurementYear: nowYear(), maintenance:false, owner:"", notes:""}; c.infrastructure.assets.push(it); }
+              return it;
+            }
+            case "project":{
+              let it = c.projects.items.find(x=>x.id===id);
+              if (!it){ it = {id, title:"", type:"Podcast", runTime:"", programLinks:[], goalText:"", resourcesText:"", successCriteriaText:"", continuation:false}; c.projects.items.push(it); }
+              return it;
+            }
+            case "training":{
+              let it = c.training.items.find(x=>x.id===id);
+              if (!it){ it = {id, topic:"", targetGroup:"", format:"", mandatory:false, status:"geplant", date:"", notes:""}; c.training.items.push(it); }
+              return it;
+            }
+            default:
+              return null;
+          }
+        };
+
+        // milestone temp store by id
+        const msTemp = new Map(); // id -> {id, fieldId, text, date, status}
+        function ensureMs(id){
+          if (!msTemp.has(id)){
+            msTemp.set(id, {id, fieldId:"", text:"", date:"", status:"geplant"});
+          }
+          return msTemp.get(id);
+        }
+
+        for (let i=start; i<rows.length; i++){
+          const r = rows[i];
+          const section = r.section ?? "";
+          const entityType = r.entityType ?? "";
+          const entityId = r.entityId ?? "";
+          const field = r.field ?? "";
+          const value = r.value ?? "";
+
+          if (!section) continue;
+
+          // meta / toggles
+          if (section === "meta" && entityType === "meta"){
+            if (field === "schoolName") st.meta.schoolName = value;
+            if (field === "version") st.meta.version = value;
+            if (field === "notes") st.meta.notes = value;
+            continue;
+          }
+          if (section === "meta" && entityType === "toggle"){
+            if (field === "dmp") st.meta.toggles.dmp = String(value).toLowerCase() === "true";
+            if (field === "slz") st.meta.toggles.slz = String(value).toLowerCase() === "true";
+            continue;
+          }
+
+          // chapter direct
+          if (entityType === "chapter"){
+            if (section === "overview"){
+              if (field in st.chapters.overview) st.chapters.overview[field] = value;
+            } else if (section === "futureVision"){
+              if (field === "visionText") st.chapters.futureVision.visionText = value;
+            } else if (section === "legal"){
+              if (field in st.chapters.legal) st.chapters.legal[field] = value;
+            } else if (section === "orgStructure"){
+              if (field === "participationText") st.chapters.orgStructure.participationText = value;
+            } else if (section === "dmp"){
+              if (field in st.chapters.dmp) st.chapters.dmp[field] = value;
+            } else if (section === "slz"){
+              if (field in st.chapters.slz) st.chapters.slz[field] = value;
+            } else if (section === "security"){
+              if (field in st.chapters.security) st.chapters.security[field] = value;
+            } else if (section === "aiGuideline"){
+              if (field in st.chapters.aiGuideline) st.chapters.aiGuideline[field] = value;
+            } else if (section === "evaluation"){
+              if (field in st.chapters.evaluation) st.chapters.evaluation[field] = value;
+            }
+            continue;
+          }
+
+          // milestone special
+          if (section === "futureVision" && entityType === "milestone"){
+            const m = ensureMs(entityId);
+            if (field === "fieldId") m.fieldId = value;
+            if (field === "text") m.text = value;
+            if (field === "date") m.date = value;
+            if (field === "status") m.status = value;
+            continue;
+          }
+
+          // entities
+          const item = ensure(entityType, entityId);
+          if (!item) continue;
+
+          // typed conversions
+          if (entityType === "program" && field === "students") item.students = Number(value) || 0;
+          else if (entityType === "area" && field === "privacyChecked") item.privacyChecked = String(value).toLowerCase() === "true";
+          else if (entityType === "asset" && field === "count") item.count = Number(value) || 0;
+          else if (entityType === "asset" && field === "procurementYear") item.procurementYear = Number(value) || nowYear();
+          else if (entityType === "asset" && field === "maintenance") item.maintenance = String(value).toLowerCase() === "true";
+          else if (entityType === "project" && field === "programLinks"){
+            try{ item.programLinks = JSON.parse(value || "[]"); }catch{ item.programLinks = []; }
+          }
+          else if (entityType === "project" && field === "continuation") item.continuation = String(value).toLowerCase() === "true";
+          else if (entityType === "training" && field === "mandatory") item.mandatory = String(value).toLowerCase() === "true";
+          else {
+            // plain
+            item[field] = value;
+          }
+        }
+
+        // attach milestones to their fields
+        for (const m of msTemp.values()){
+          const field = st.chapters.futureVision.fields.find(f=>f.id===m.fieldId);
+          if (!field) continue;
+          field.milestones.push({ id: m.id, text: m.text, date: m.date, status: m.status });
+        }
+
+        // ensure workflows have at least defaults if CSV empty
+        if (!st.chapters.workflows.areas.length){
+          st.chapters.workflows.areas = structuredClone(DEFAULT_STATE.chapters.workflows.areas);
+        }
+        return st;
+      }
+
+      function toCsv(rows){
+        const header = ["section","entityType","entityId","field","value"];
+        const lines = [header.join(",")];
+        for (const r of rows){
+          const line = [
+            csvCell(r.section),
+            csvCell(r.entityType),
+            csvCell(r.entityId),
+            csvCell(r.field),
+            csvCell(r.value)
+          ].join(",");
+          lines.push(line);
+        }
+        return lines.join("\n");
+      }
+
+      function csvCell(v){
+        const s = (v == null ? "" : String(v));
+        if (/[",\n\r]/.test(s)){
+          return '"' + s.replace(/"/g,'""') + '"';
+        }
+        return s;
+      }
+
+      function parseCsv(text){
+        // Simple RFC4180-ish parser for 5 columns
+        const rows = [];
+        let i=0, field="", row=[], inQuotes=false;
+        const pushField = ()=>{
+          row.push(field);
+          field="";
+        };
+        const pushRow = ()=>{
+          if (row.length || field.length){
+            while (row.length < 4) row.push("");
+            row.push(field);
+            const [section, entityType, entityId, fieldName, value] = row;
+            rows.push({section, entityType, entityId, field: fieldName, value});
+          }
+          field=""; row=[];
+        };
+
+        while (i < text.length){
+          const ch = text[i];
+
+          if (inQuotes){
+            if (ch === '"'){
+              const next = text[i+1];
+              if (next === '"'){ field += '"'; i+=2; continue; }
+              inQuotes = false; i++; continue;
+            } else {
+              field += ch; i++; continue;
+            }
+          } else {
+            if (ch === '"'){ inQuotes=true; i++; continue; }
+            if (ch === ","){ pushField(); i++; continue; }
+            if (ch === "\r"){
+              // ignore, but handle CRLF
+              if (text[i+1] === "\n"){ pushField(); pushRow(); i+=2; continue; }
+              pushField(); pushRow(); i++; continue;
+            }
+            if (ch === "\n"){ pushField(); pushRow(); i++; continue; }
+            field += ch; i++; continue;
+          }
+        }
+        // last
+        if (inQuotes){
+          // tolerate
+          inQuotes = false;
+        }
+        if (field.length || row.length){
+          pushField();
+          // pushField already pushed field; adjust row shape:
+          const [section, entityType, entityId, fieldName, value] = row;
+          rows.push({section: section||"", entityType: entityType||"", entityId: entityId||"", field: fieldName||"", value: value||""});
+        }
+        // normalize header if present
+        if (rows.length){
+          // If first row is actual header line, it will match exactly
+          if (rows[0].section === "section" && rows[0].entityType === "entityType") return rows;
+        }
+        // In case parseCsv produced empty lines etc.
+        return rows.filter(r => Object.values(r).some(v => (v||"").trim() !== ""));
+      }
+
+      // =========================
+      // Read-only HTML export
+      // =========================
+      function esc(s){
+        return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+      }
+      function nl2br(s){
+        return esc(s).replace(/\n/g,"<br>");
+      }
+
+      function buildReadonlyHtml(st){
+        const visible = CHAPTERS.filter(isChapterVisibleForState(st));
+        const css = `
+          body{font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; margin:24px; color:#111}
+          h1{font-size:20px; margin:0 0 10px}
+          h2{font-size:15px; margin:18px 0 8px}
+          .meta{margin-bottom:18px; padding:12px; border:1px solid #ddd; border-radius:12px}
+          .chapter{margin:18px 0; padding:14px; border:1px solid #ddd; border-radius:14px}
+          .muted{color:#555; font-size:13px}
+          table{width:100%; border-collapse:collapse}
+          th, td{border-bottom:1px solid #eee; padding:8px; vertical-align:top; font-size:13px}
+          th{background:#f5f5f5; text-align:left}
+          .card{border:1px solid #eee; padding:10px; border-radius:12px; margin:10px 0}
+          @media print{ body{margin:10mm} .chapter{page-break-inside:avoid}}
+        `;
+
+        const metaHtml = `
+          <div class="meta">
+            <h1>Medienkonzept BK NRW</h1>
+            <div class="muted"><b>Schule:</b> ${esc(st.meta.schoolName || "—")} &nbsp;|&nbsp; <b>Version/Stand:</b> ${esc(st.meta.version || "—")}</div>
+            <div class="muted" style="margin-top:6px">${nl2br(st.meta.notes || "")}</div>
+          </div>
+        `;
+
+        const c = st.chapters;
+
+        function chapterBlock(title, inner){
+          return `<div class="chapter"><h1>${esc(title)}</h1>${inner}</div>`;
+        }
+
+        const blocks = [];
+
+        // 1 overview
+        blocks.push(chapterBlock("1. Überblick & Zielsetzung", `
+          <h2>Zielsetzung</h2><div>${nl2br(c.overview.purposeText)}</div>
+          <h2>Geltungsbereich</h2><div>${nl2br(c.overview.scopeText)}</div>
+          <h2>Kurzfassung</h2><div>${nl2br(c.overview.summaryText)}</div>
+        `));
+
+        // 2 programs
+        const progRows = c.schoolProfile.programs.map(p=>`
+          <tr><td>${esc(p.name)}</td><td>${esc(p.type)}</td><td>${esc(p.students)}</td><td>${nl2br(p.notes)}</td></tr>
+        `).join("") || `<tr><td colspan="4" class="muted">Keine Einträge</td></tr>`;
+        blocks.push(chapterBlock("2. Schulprofil & Bildungsgänge", `
+          <table>
+            <thead><tr><th>Name</th><th>Typ</th><th>Schülerzahl</th><th>Notiz</th></tr></thead>
+            <tbody>${progRows}</tbody>
+          </table>
+        `));
+
+        // 3 future vision
+        const fieldsHtml = c.futureVision.fields.map(f=>{
+          const ms = (f.milestones||[]).map(m=>`<tr><td>${esc(m.text)}</td><td>${esc(m.date)}</td><td>${esc(m.status)}</td></tr>`).join("") ||
+            `<tr><td colspan="3" class="muted">Keine Meilensteine</td></tr>`;
+          return `
+            <div class="card">
+              <div><b>${esc(f.title || "Entwicklungsfeld")}</b></div>
+              <div class="muted">Horizon: ${esc(f.horizon)} • Status: ${esc(f.status)}</div>
+              <div style="margin-top:8px">
+                <table>
+                  <thead><tr><th>Meilenstein</th><th>Datum</th><th>Status</th></tr></thead>
+                  <tbody>${ms}</tbody>
+                </table>
+              </div>
+            </div>
+          `;
+        }).join("") || `<div class="muted">Keine Entwicklungsfelder</div>`;
+        blocks.push(chapterBlock("3. Zukunftsvision", `
+          <h2>Kurzvision</h2><div>${nl2br(c.futureVision.visionText)}</div>
+          <h2>Entwicklungsfelder</h2>${fieldsHtml}
+        `));
+
+        // 4 legal
+        blocks.push(chapterBlock("4. Rechtlicher Rahmen", `
+          <h2>Rahmen</h2><div>${nl2br(c.legal.legalText)}</div>
+          <h2>Hinweise / Referenzen</h2><div>${nl2br(c.legal.attachmentsNote)}</div>
+        `));
+
+        // 5 org
+        const rolesHtml = c.orgStructure.roles.map(r=>`
+          <div class="card">
+            <div><b>${esc(r.title || "Rolle")}</b></div>
+            <div class="muted">Berichtslinie: ${esc(r.reportLine || "—")} • Vertretung: ${esc(r.backup || "—")}</div>
+            <h2 style="margin:10px 0 6px; font-size:13px">Beschreibung</h2><div>${nl2br(r.description)}</div>
+            <h2 style="margin:10px 0 6px; font-size:13px">Verantwortungsbereiche</h2><div>${nl2br(r.responsibilities)}</div>
+          </div>
+        `).join("") || `<div class="muted">Keine Rollen erfasst</div>`;
+        blocks.push(chapterBlock("5. Organisationsstruktur", `
+          <h2>Rollen</h2>${rolesHtml}
+          <h2>Beteiligungsstruktur</h2><div>${nl2br(c.orgStructure.participationText)}</div>
+        `));
+
+        // 6 workflows
+        const wfHtml = c.workflows.areas.map(a=>`
+          <div class="card">
+            <div><b>${esc(a.name || "Bereich")}</b></div>
+            <div class="muted">Tool: ${esc(a.tool||"—")} • Zuständigkeit: ${esc(a.owner||"—")}</div>
+            <div class="muted">Nutzungsgrad: ${esc(a.usageLevel)} • Rollout: ${esc(a.rollout)} • Datenschutz geprüft: ${esc(a.privacyChecked)}</div>
+            <div class="muted">Stabilität: ${esc(a.stability)}</div>
+            <div style="margin-top:6px">${nl2br(a.notes)}</div>
+          </div>
+        `).join("") || `<div class="muted">Keine Bereiche</div>`;
+        blocks.push(chapterBlock("6. Digitale Arbeitsprozesse", wfHtml));
+
+        // 7 infra
+        const roomHtml = c.infrastructure.roomTypes.map(rt=>`<tr><td>${esc(rt.name)}</td><td>${nl2br(rt.notes)}</td></tr>`).join("") ||
+          `<tr><td colspan="2" class="muted">Keine Raumtypen</td></tr>`;
+        const assetsHtml = computeAssetPriority(c.infrastructure.assets).map(a=>{
+          const age = safeComputeAge(a.procurementYear);
+          const rt = c.infrastructure.roomTypes.find(x=>x.id===a.roomTypeId)?.name || "(nicht zugeordnet)";
+          return `<tr>
+            <td>${esc(rt)}</td><td>${esc(a.name)}</td><td>${esc(a.count)}</td><td>${esc(a.condition)}</td>
+            <td>${esc(a.procurementYear)}</td><td>${esc(age==null?"—":age)}</td><td>${esc(a.maintenance)}</td><td>${esc(a.owner)}</td><td>${nl2br(a.notes)}</td>
+          </tr>`;
+        }).join("") || `<tr><td colspan="9" class="muted">Keine Ausstattungsbausteine</td></tr>`;
+        blocks.push(chapterBlock("7. Infrastruktur & Räume", `
+          <h2>Raumtypen</h2>
+          <table><thead><tr><th>Raumtyp</th><th>Notiz</th></tr></thead><tbody>${roomHtml}</tbody></table>
+          <h2 style="margin-top:16px">Ausstattung (priorisiert)</h2>
+          <table><thead><tr>
+            <th>Raumtyp</th><th>Baustein</th><th>Anzahl</th><th>Zustand</th><th>Anschaffungsjahr</th><th>Alter</th><th>Wartung</th><th>Zuständig</th><th>Notiz</th>
+          </tr></thead><tbody>${assetsHtml}</tbody></table>
+        `));
+
+        // 8/9 optional
+        if (st.meta.toggles.dmp){
+          blocks.push(chapterBlock("8. DMP", `
+            <h2>Software</h2><div>${esc(c.dmp.software)}</div>
+            <h2>Freitext</h2><div>${nl2br(c.dmp.dmpText)}</div>
+            <h2>Module</h2><div>${nl2br(c.dmp.modulesText)}</div>
+            <h2>Schnittstellen</h2><div>${nl2br(c.dmp.interfacesText)}</div>
+            <h2>Fortbildungsbedarf</h2><div>${nl2br(c.dmp.trainingNeedsText)}</div>
+          `));
+        }
+        if (st.meta.toggles.slz){
+          blocks.push(chapterBlock("9. Selbstlernzentrum", `
+            <h2>Öffnungszeiten</h2><div>${esc(c.slz.openingHours)}</div>
+            <h2>Konzept</h2><div>${nl2br(c.slz.conceptText)}</div>
+            <h2>Personal</h2><div>${nl2br(c.slz.staffingText)}</div>
+            <h2>Ausstattung</h2><div>${nl2br(c.slz.equipmentText)}</div>
+            <h2>Zukunft</h2><div>${nl2br(c.slz.futureText)}</div>
+          `));
+        }
+
+        // 10 projects
+        const projHtml = c.projects.items.map(p=>`
+          <div class="card">
+            <div><b>${esc(p.title || "Projekt")}</b> <span class="muted">(${esc(p.type)})</span></div>
+            <div class="muted">Laufzeit: ${esc(p.runTime||"—")} • Verstetigung: ${esc(p.continuation)}</div>
+            <div class="muted">Bildungsgänge: ${
+              (p.programLinks||[]).map(id=>{
+                const pr = c.schoolProfile.programs.find(x=>x.id===id);
+                return pr ? pr.name : id;
+              }).filter(Boolean).join(", ") || "—"
+            }</div>
+            <h2 style="margin:10px 0 6px; font-size:13px">Ziel</h2><div>${nl2br(p.goalText)}</div>
+            <h2 style="margin:10px 0 6px; font-size:13px">Ressourcen</h2><div>${nl2br(p.resourcesText)}</div>
+            <h2 style="margin:10px 0 6px; font-size:13px">Erfolgskriterien</h2><div>${nl2br(p.successCriteriaText)}</div>
+          </div>
+        `).join("") || `<div class="muted">Keine Projekte</div>`;
+        blocks.push(chapterBlock("10. Besondere Projekte", projHtml));
+
+        // 11 training
+        const trHtml = c.training.items.map(t=>`
+          <div class="card">
+            <div><b>${esc(t.topic||"Fortbildung")}</b></div>
+            <div class="muted">Zielgruppe: ${esc(t.targetGroup||"—")} • Format: ${esc(t.format||"—")} • Pflicht: ${esc(t.mandatory)}</div>
+            <div class="muted">Status: ${esc(t.status)} • Datum: ${esc(t.date||"—")}</div>
+            <div style="margin-top:6px">${nl2br(t.notes)}</div>
+          </div>
+        `).join("") || `<div class="muted">Keine Fortbildungen</div>`;
+        blocks.push(chapterBlock("11. Fortbildung", trHtml));
+
+        // 12 security
+        blocks.push(chapterBlock("12. Datenschutz & IT-Sicherheit", `
+          <h2>Datenschutz</h2><div>${nl2br(c.security.privacyText)}</div>
+          <h2>Zugriff / Rechte</h2><div>${nl2br(c.security.accessText)}</div>
+          <h2>Backup</h2><div>${nl2br(c.security.backupText)}</div>
+          <h2>Vorfälle</h2><div>${nl2br(c.security.incidentText)}</div>
+          <h2>Notizen</h2><div>${nl2br(c.security.notes)}</div>
+        `));
+
+        // 13 ai
+        blocks.push(chapterBlock("13. KI-Leitfaden", `
+          <h2>Grundhaltung</h2><div>${nl2br(c.aiGuideline.stanceText)}</div>
+          <h2>Lehrkräfte</h2><div>${nl2br(c.aiGuideline.teacherUseText)}</div>
+          <h2>Schüler:innen</h2><div>${nl2br(c.aiGuideline.studentUseText)}</div>
+          <h2>Prüfungen</h2><div>${nl2br(c.aiGuideline.assessmentText)}</div>
+          <h2>Kennzeichnung</h2><div>${nl2br(c.aiGuideline.labelingText)}</div>
+          <h2>Datenschutz</h2><div>${nl2br(c.aiGuideline.privacyText)}</div>
+          <h2>Fortbildung</h2><div>${nl2br(c.aiGuideline.trainingText)}</div>
+          <h2>Review</h2><div>${nl2br(c.aiGuideline.reviewCycleText)}</div>
+        `));
+
+        // 14 evaluation
+        blocks.push(chapterBlock("14. Evaluation & Fortschreibung", `
+          <h2>Rhythmus</h2><div>${nl2br(c.evaluation.rhythmText)}</div>
+          <h2>Zuständigkeit</h2><div>${nl2br(c.evaluation.responsibilityText)}</div>
+          <h2>Instrumente</h2><div>${nl2br(c.evaluation.instrumentsText)}</div>
+          <div class="muted" style="margin-top:10px"><b>Letzte:</b> ${esc(c.evaluation.lastDate||"—")} &nbsp;|&nbsp; <b>Nächste:</b> ${esc(c.evaluation.nextDate||"—")}</div>
+          <h2 style="margin-top:14px">Änderungslog</h2><div>${nl2br(c.evaluation.changeLogText)}</div>
+        `));
+
+        return `<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Medienkonzept Export</title><style>${css}</style></head>
+<body>
+${metaHtml}
+${blocks.join("\n")}
+</body></html>`;
+      }
+
+      function isChapterVisibleForState(st){
+        return (ch)=> {
+          if (!ch.optional) return true;
+          return !!st.meta.toggles[ch.toggle];
+        };
+      }
+
+      // =========================
+      // init
+      // =========================
+      renderAll();
+    </script>
+  </body>
+</html>
